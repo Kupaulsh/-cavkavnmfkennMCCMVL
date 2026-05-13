@@ -1,0 +1,1949 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finihomes Residences</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Playfair+Display:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const app = initializeApp({
+      apiKey: "AIzaSyCTaqaJ5tgO5p982kgltbAIkXsKodSSGW8",
+      authDomain: "finihomes-admin.firebaseapp.com",
+      projectId: "finihomes-admin",
+      storageBucket: "finihomes-admin.firebasestorage.app",
+      messagingSenderId: "554166532113",
+      appId: "1:554166532113:web:ece577f626f854e21a59b0"
+    });
+    const db = getFirestore(app);
+
+    
+    onSnapshot(doc(db, 'site', 'content'), (snap) => {
+      if (!snap.exists()) return;
+      const d = snap.data();
+
+      
+      if (d.general) {
+        const g = d.general;
+        const setT = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
+        const setV = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+        setT('brand-name', g.brand);
+        setT('nav-tagline', g.navTagline);
+        setT('footer-tagline', g.footerTagline);
+        setT('footer-address', g.office);
+        setT('about-title', g.aboutTitle);
+        setT('about-p1', g.aboutP1);
+        setT('about-p2', g.aboutP2);
+        setT('about-p3', g.aboutP3);
+        setT('stat-years', g.stat1);
+        setT('stat-units', g.stat2);
+        setT('stat-projects', g.stat3);
+        setT('stat-satisfaction', g.stat4);
+      }
+
+      
+      if (d.hero) {
+        const heroTheme = document.getElementById('hero-theme');
+        const heroSub = document.getElementById('hero-subtheme');
+        if (heroTheme && d.hero.headline) heroTheme.textContent = d.hero.headline;
+        if (heroSub && d.hero.subheadline) heroSub.textContent = d.hero.subheadline;
+      }
+
+      
+      if (d.contact) {
+        const c = d.contact;
+        // Only overwrite footer-email if both email fields are saved in Firestore
+        const fe = document.getElementById('footer-email');
+        if (fe && c.email && c.email2) {
+          fe.innerHTML = `<div class="flex items-center gap-1.5"><i data-lucide="mail" style="width:13px;height:13px;flex-shrink:0;"></i>${c.email}</div>` +
+            `<div class="flex items-center gap-1.5"><i data-lucide="mail" style="width:13px;height:13px;flex-shrink:0;"></i>${c.email2}</div>`;
+          lucide.createIcons();
+        }
+        // Only overwrite footer-phone if both phone fields are saved in Firestore
+        const fp = document.getElementById('footer-phone');
+        if (fp && c.phone && c.phone2) {
+          fp.innerHTML = `<div class="flex items-center gap-1.5"><i data-lucide="phone" style="width:13px;height:13px;flex-shrink:0;"></i>${c.phone}</div>` +
+            `<div class="flex items-center gap-1.5"><i data-lucide="phone" style="width:13px;height:13px;flex-shrink:0;"></i>${c.phone2}</div>`;
+          lucide.createIcons();
+        }
+        // Legacy single-value display elements
+        const de = document.getElementById('display-email');
+        const dp = document.getElementById('display-phone');
+        if (de && c.email) de.textContent = c.email;
+        if (dp && c.phone) dp.textContent = c.phone + (c.phone2 ? ' | ' + c.phone2 : '');
+        if (c.fbUrl) {
+          // Convert any facebook.com URL to m.me for direct Messenger open
+          let messengerUrl = c.fbUrl;
+          const fbMatch = c.fbUrl.match(/facebook\.com\/(?:profile\.php\?id=)?([^/?&]+)/);
+          if (fbMatch) messengerUrl = 'https://m.me/1050333154835743' + fbMatch[1];
+          document.querySelectorAll('#fb-link').forEach(el => el.href = messengerUrl);
+        }
+        if (c.whatsapp) { const num=c.whatsapp.replace(/\D/g,''); document.querySelectorAll('#wa-link').forEach(el => el.href='https://wa.me/'+num); }
+      }
+
+      
+      if (d.colors) {
+        const r = document.documentElement;
+        if (d.colors.bg) { r.style.setProperty('--leaf', d.colors.bg); document.querySelectorAll('#amenities,#testimonials,#contact,[data-leafbg]').forEach(el=>el.style.backgroundColor='transparent'); }
+      }
+
+      
+      if (d.units && window._reRenderUnits) window._reRenderUnits(d.units);
+      if (d.amenities && window._reRenderAmenities) window._reRenderAmenities(d.amenities);
+      if (d.testimonials && window._reRenderTestimonials) window._reRenderTestimonials(d.testimonials);
+      if (d.faq && window._reRenderFaq) window._reRenderFaq(d.faq);
+      if (d.projects && window._reRenderProjects) window._reRenderProjects(d.projects);
+    });
+  </script>
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        leaf: '#2D6A4F',
+        leafDark: '#1B4332',
+        leafLight: '#40916C',
+        cream: '#FDE68A',
+        creamLight: '#FEF3C7',
+        warmWhite: '#FAFAF5'
+      }
+    }
+  }
+}
+</script>
+  <style>
+html { scroll-behavior: smooth; }
+body { font-family: 'DM Sans', sans-serif; }
+
+#app {
+  scrollbar-width: none;
+}
+#app::-webkit-scrollbar {
+  display: none;
+}
+
+.font-display { font-family: 'Playfair Display', serif; }
+
+html, body {
+  overflow: auto;
+  scrollbar-width: none;  
+  -ms-overflow-style: none;  
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.bubble-hover {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+}
+.bubble-hover:hover {
+  transform: scale(1.045);
+  box-shadow: 0 12px 36px rgba(45,106,79,0.18);
+}
+
+
+.nav-fixed { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; transition: background 0.3s, box-shadow 0.3s; background: transparent; }
+.nav-scrolled { background: transparent; }
+
+/* Logo hamburger */
+.logo-hamburger-wrap {
+  border-radius: 50%;
+}
+@media (min-width: 1024px) {
+  .logo-hamburger-wrap,
+  .logo-hamburger-wrap img {
+    width: 112px !important;
+    height: 112px !important;
+  }
+  #mobile-menu { top: 136px !important; }
+}
+
+/* Gold shine animation for Browse Units button */
+@keyframes goldShine {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+#nav-links { flex-wrap: nowrap; overflow: hidden; }
+#nav-links a { white-space: nowrap; }
+@media (max-width: 1024px) {
+  #nav-links { gap: 0.75rem !important; }
+  #nav-links a { font-size: 0.75rem; }
+}
+
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: all; }
+.modal-content {
+  background: #fff; border-radius: 16px; max-width: 700px; width: 92%;
+  max-height: 85%; overflow-y: auto; transform: scale(0.9); transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  padding: 0;
+}
+.modal-overlay.active .modal-content { transform: scale(1); }
+
+
+.carousel-track { display: flex; align-items: center; transition: transform 0.5s cubic-bezier(0.25,0.8,0.25,1); }
+.carousel-item { flex-shrink: 0; transition: all 0.5s ease; }
+.carousel-item.active { opacity: 1; filter: blur(0); transform: scale(1); }
+.carousel-item.blurred { opacity: 0.5; filter: blur(2px); transform: scale(0.85); }
+
+
+.testimonial-track {
+  display: flex;
+  animation: scrollTestimonials 25s linear infinite;
+}
+@keyframes scrollTestimonials {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+
+.roadmap-dot { width: 18px; height: 18px; border-radius: 50%; border: 3px solid #FFD700; background: #fff; position: relative; z-index: 2; box-shadow: 0 0 8px rgba(255,215,0,0.5); }
+.roadmap-dot.completed { background: #FFD700; box-shadow: 0 0 10px rgba(255,215,0,0.7); }
+
+
+.roadmap-label {
+  font-size: clamp(0.5rem, 1.5vw, 0.75rem);
+  line-height: 1.3;
+  text-align: center;
+  white-space: normal;
+  width: 100%;
+  max-width: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+
+.roadmap-mobile-container {
+  width: clamp(160px, 70vw, 420px);
+}
+.roadmap-mobile-dot-wrap {
+  width: 20px;
+}
+
+
+@media (max-width: 400px) {
+  .roadmap-mobile-dot {
+    width: 11px !important;
+    height: 11px !important;
+    border-width: 2px !important;
+  }
+  .roadmap-mobile-dot-wrap {
+    width: 11px;
+  }
+}
+@media (min-width: 401px) and (max-width: 600px) {
+  .roadmap-mobile-dot {
+    width: 14px !important;
+    height: 14px !important;
+    border-width: 2px !important;
+  }
+  .roadmap-mobile-dot-wrap {
+    width: 14px;
+  }
+}
+
+
+.faq-answer { 
+  display: none;
+  opacity: 0; 
+  transition: opacity 0.4s ease;
+}
+.faq-answer.open { 
+  display: block;
+  opacity: 1;
+}
+
+/* White text (no glow) */
+.white-glow-text {
+  color: #ffffff !important;
+}
+
+/* Glow only for "Ongoing Finihomes Marilao" */
+.ongoing-glow {
+  color: #ffffff !important;
+  text-shadow:
+    0 0 8px rgba(255,255,255,0.9),
+    0 0 18px rgba(255,255,255,0.7),
+    0 0 32px rgba(255,255,255,0.5),
+    0 0 60px rgba(255,255,255,0.3);
+}
+
+/* Blurred glass card style (like amenities) */
+.glass-blur-card {
+  background: rgba(255,255,255,0.10) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18) !important;
+  color: #fff;
+}
+.glass-blur-card h3 { color: #ffffff !important; }
+.glass-blur-card p { color: #ffffff !important; }
+.glass-blur-card li { color: #ffffff !important; }
+.glass-blur-card .text-gray-500, .glass-blur-card .text-gray-600 { color: #ffffff !important; }
+.glass-blur-card .text-leaf { color: #FFD700 !important; }
+.glass-blur-card .text-leafLight { color: #a7f3d0 !important; }
+.glass-blur-card .bg-green-100 { background: rgba(167,243,208,0.15) !important; }
+.glass-blur-card .text-red-700 { color: #fca5a5 !important; }
+.glass-blur-card .text-green-700 { color: #6ee7b7 !important; }
+.glass-blur-card .bg-red-100 { background: rgba(254,202,202,0.15) !important; }
+.glass-blur-card .bg-green-50 { background: rgba(167,243,208,0.10) !important; }
+.glass-blur-card .bg-leaf\/10, .glass-blur-card [class*="bg-leaf"] { background: rgba(255,215,0,0.12) !important; color: #FFD700 !important; }
+
+/* Blurred FAQ */
+.faq-blur-card {
+  background: rgba(255,255,255,0.10) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.15) !important;
+}
+.faq-blur-card button { color: #ffffff !important; background: transparent !important; }
+.faq-blur-card button:hover { background: rgba(255,255,255,0.08) !important; }
+.faq-blur-card .faq-answer { color: #ffffff !important; }
+
+
+@keyframes countUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.stat-item { animation: countUp 0.6s ease forwards; }
+
+
+.fade-section { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.fade-section.visible { opacity: 1; transform: translateY(0); }
+
+/* These sections are inside a shared background wrapper — no transform so background stays seamless */
+#about, #why { opacity: 1 !important; transform: none !important; transition: none !important; }
+
+
+
+/* ── Golden Paradise Aesthetic ── */
+
+/* Floating golden particles on hero */
+@keyframes floatParticle {
+  0%   { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.7; }
+  33%  { transform: translateY(-20px) translateX(8px) scale(1.1); opacity: 1; }
+  66%  { transform: translateY(-10px) translateX(-6px) scale(0.95); opacity: 0.8; }
+  100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.7; }
+}
+.gold-particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, #FFD700, #FFA500);
+  pointer-events: none;
+  animation: floatParticle linear infinite;
+  filter: blur(0.5px);
+  z-index: 5;
+}
+
+/* Subtle golden shimmer on section headings */
+@keyframes textShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.gold-shimmer-text {
+  background: linear-gradient(90deg, #FFD700 0%, #FFF8DC 30%, #FFD700 50%, #FFA500 70%, #FFD700 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: textShimmer 4s linear infinite;
+}
+
+/* Pulse on Browse Units button */
+@keyframes goldPulse {
+  0%, 100% { box-shadow: 0 0 0 2px #FFD700, 0 0 12px 2px #FFB300, 0 4px 20px rgba(255,179,0,0.45); }
+  50% { box-shadow: 0 0 0 3px #FFD700, 0 0 22px 6px #FFB300, 0 6px 30px rgba(255,179,0,0.65); }
+}
+a[href="#units"].bubble-hover {
+  animation: goldShine 2.5s ease-in-out infinite, goldPulse 2s ease-in-out infinite !important;
+}
+
+/* Golden divider lines */
+.gold-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #FFD700, #FFA500, #FFD700, transparent);
+  margin: 0;
+  opacity: 0.6;
+}
+
+/* Hero section golden sparkles */
+#home::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(ellipse at 20% 30%, rgba(255,215,0,0.07) 0%, transparent 40%),
+    radial-gradient(ellipse at 80% 70%, rgba(255,165,0,0.06) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 10%, rgba(255,215,0,0.05) 0%, transparent 30%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Amenities card style — golden touch */
+#amenities-grid .bubble-hover {
+  background: rgba(255,255,255,0.10) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,215,0,0.25) !important;
+  color: white;
+}
+#amenities-grid .bubble-hover h3 { color: #ffffff !important; }
+#amenities-grid .bubble-hover h3.font-display { color: #ffffff !important; }
+#amenities-grid h3 { color: #ffffff !important; }
+#amenities-grid .bubble-hover p { color: #ffffff !important; }
+#amenities-grid .bubble-hover li { color: #ffffff !important; }
+
+/* Hero wave fill updated to match about section bg */
+#home .absolute.bottom-0 path { fill: transparent !important; }
+
+/* Scroll-based glow on logo */
+#nav-logo-img {
+  transition: filter 0.3s ease;
+}
+
+@media (max-width: 480px) {
+  /* Available Units carousel */
+  #units .overflow-hidden[style*="height: 640px"] { height: calc(65vw + 160px) !important; }
+  #units [style*="margin-top:-8px"] { margin-top: -16px !important; }
+
+  /* Modal carousels */
+  .proj-modal-slide { height: 260px !important; }
+  .unit-layout-slide { height: 300px !important; }
+}
+
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #40916C; border-radius: 4px; }
+
+.mockup-bg {
+  /* background handled by shared wrapper */
+}
+
+.project-img-placeholder {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  display: flex; align-items: center; justify-content: center;
+  color: #2D6A4F; font-weight: 600;
+}
+.amenity-img {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem;
+}
+
+
+.toast { position: fixed; bottom: 24px; right: 24px; z-index: 3000; background: #2D6A4F; color: #fff; padding: 14px 24px; border-radius: 12px; transform: translateY(100px); opacity: 0; transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+.toast.show { transform: translateY(0); opacity: 1; }
+
+
+.inline-confirm { display: none; }
+.inline-confirm.show { display: flex; }
+
+/* ── Project modal image carousel ── */
+.proj-modal-carousel { position: relative; background: #f9fafb; border-radius: 12px; overflow: hidden; }
+.proj-modal-track { display: flex; transition: transform 0.45s cubic-bezier(0.25,0.8,0.25,1); will-change: transform; }
+.proj-modal-slide { flex-shrink: 0; width: 100%; height: 480px; position: relative; }
+.unit-layout-slide { height: 520px; background: #f9fafb; }
+.unit-layout-slide img { object-fit: contain !important; background: #f9fafb; }
+.proj-modal-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.proj-modal-slide .slide-empty {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  display: flex; align-items: center; justify-content: center;
+  color: #2D6A4F; font-size: 13px; font-family: 'DM Sans', sans-serif;
+}
+.proj-modal-slide .slide-map { width: 100%; height: 100%; }
+.proj-modal-slide .slide-map iframe { width: 100%; height: 100%; border: 0; display: block; }
+.proj-modal-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,0.92); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18); z-index: 10;
+  transition: background 0.2s, transform 0.2s;
+}
+.proj-modal-btn:hover { background: #fff; transform: translateY(-50%) scale(1.1); }
+.proj-modal-btn.prev-btn { left: 8px; }
+.proj-modal-btn.next-btn { right: 8px; }
+.proj-modal-dots {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px; z-index: 10;
+}
+.proj-modal-dot {
+  width: 7px; height: 7px; border-radius: 50%; border: none; cursor: pointer; padding: 0;
+  background: #d1d5db; transition: background 0.2s, transform 0.2s;
+}
+.proj-modal-dot.active { background: #2D6A4F; transform: scale(1.35); }
+.slide-label {
+  position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.35); color: #fff; font-size: 11px; font-family: 'DM Sans', sans-serif;
+  padding: 3px 10px; border-radius: 20px; white-space: nowrap; pointer-events: none;
+}
+
+#contact .contact-icon-wrap i,
+#contact .contact-icon-wrap svg {
+  width: 13px !important;
+  height: 13px !important;
+}
+/* Fixed full-page background */
+#site-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+}
+#site-bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(22,58,14,0.72);
+  pointer-events: none;
+}
+@media (max-width: 767px) {
+  #site-bg { background-position: center center; background-size: cover; }
+}
+</style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+
+</head>
+ <body class="h-full">
+  <div id="app" class="w-full h-full overflow-auto">
+   <nav id="navbar" class="nav-fixed" style="background: transparent; pointer-events: none;">
+     <div style="position:absolute; top: 14px; right: 20px; pointer-events: all;">
+       <button id="hamburger-btn" aria-label="Open menu" style="background: transparent; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
+         <div class="logo-hamburger-wrap" style="position: relative; width: 88px; height: 88px; display: flex; align-items: center; justify-content: center;">
+           <img src="finihomes_pfp.png" alt="Finihomes" id="nav-logo-img" style="width:88px; height:88px; border-radius:50%; object-fit:cover; display: block;" />
+         </div>
+       </button>
+     </div>
+   </nav>
+   <div id="mobile-menu" class="fixed z-[1500] opacity-0 pointer-events-none transition-all duration-300" style="top: 108px; right: 16px;">
+     <div class="bg-leafDark rounded-2xl shadow-2xl overflow-hidden" style="min-width: 200px; border: 1px solid rgba(253,230,138,0.3); box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(253,230,138,0.2);">
+       <div class="flex flex-col py-2">
+         <a href="#home" class="text-white/90 hover:text-cream hover:bg-white/10 text-base font-medium mob-link px-5 py-3 transition-colors">Home</a>
+         <a href="#about" class="text-white/90 hover:text-cream hover:bg-white/10 text-base font-medium mob-link px-5 py-3 transition-colors">About</a>
+         <a href="#why" class="text-white/90 hover:text-cream hover:bg-white/10 text-base font-medium mob-link px-5 py-3 transition-colors">Why Us</a>
+         <a href="#roadmap" class="text-white/90 hover:text-cream hover:bg-white/10 text-base font-medium mob-link px-5 py-3 transition-colors">Projects</a>
+         <a href="#amenities" class="text-white/90 hover:text-cream hover:bg-white/10 text-base font-medium mob-link px-5 py-3 transition-colors">Amenities</a>
+         <a href="#partners" class="text-white/90 hover:text-cream hover:bg-white/10 text-base font-medium mob-link px-5 py-3 transition-colors">Payment</a>
+         <a href="#testimonials" class="text-white/90 hover:text-cream hover:bg-white/10 text-base font-medium mob-link px-5 py-3 transition-colors">Testimonials</a>
+         <a href="#units" class="text-white/90 hover:text-cream hover:bg-white/10 text-base font-medium mob-link px-5 py-3 transition-colors">Units</a>
+         <a href="#contact" class="text-white/90 hover:text-cream hover:bg-white/10 text-base font-medium mob-link px-5 py-3 transition-colors">Contact</a>
+         <a href="#faq" class="text-white/90 hover:text-cream hover:bg-white/10 text-base font-medium mob-link px-5 py-3 transition-colors">FAQ</a>
+       </div>
+     </div>
+   </div>
+   
+   <div id="mobile-menu-overlay" style="display:none;position:fixed;inset:0;z-index:1400;"></div>
+
+   <!-- Fixed full-page background image + green overlay -->
+   <div id="site-bg"></div>
+   <div id="site-bg-overlay"></div>
+
+   <!-- ONE shared wrapper for Home + About + Why -->
+   <div id="hero-wrapper" style="position:relative;">
+     <!-- Golden particles -->
+     <div class="gold-particle" style="width:6px;height:6px;left:12%;top:8%;animation-duration:6s;animation-delay:0s;opacity:0.6;z-index:2;position:absolute;"></div>
+     <div class="gold-particle" style="width:4px;height:4px;left:25%;top:30%;animation-duration:8s;animation-delay:1.5s;opacity:0.5;z-index:2;position:absolute;"></div>
+     <div class="gold-particle" style="width:8px;height:8px;left:72%;top:12%;animation-duration:7s;animation-delay:0.7s;opacity:0.7;z-index:2;position:absolute;"></div>
+     <div class="gold-particle" style="width:5px;height:5px;left:85%;top:45%;animation-duration:9s;animation-delay:2.2s;opacity:0.5;z-index:2;position:absolute;"></div>
+     <div class="gold-particle" style="width:7px;height:7px;left:45%;top:60%;animation-duration:6.5s;animation-delay:1s;opacity:0.6;z-index:2;position:absolute;"></div>
+     <div class="gold-particle" style="width:4px;height:4px;left:60%;top:75%;animation-duration:10s;animation-delay:3s;opacity:0.45;z-index:2;position:absolute;"></div>
+     <div class="gold-particle" style="width:9px;height:9px;left:8%;top:85%;animation-duration:7.5s;animation-delay:0.3s;opacity:0.5;z-index:2;position:absolute;"></div>
+     <div class="gold-particle" style="width:5px;height:5px;left:90%;top:20%;animation-duration:8.5s;animation-delay:2s;opacity:0.6;z-index:2;position:absolute;"></div>
+
+   <section id="home" class="relative" style="background:none; z-index:1;">
+    <div style="position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:90vh; padding: 100px 24px 60px;">
+     <div style="max-width: 720px; width:100%; margin:0 auto; display:flex; flex-direction:column; align-items:center;">
+      <h1 id="hero-theme" class="font-display font-bold text-white leading-tight" style="font-size: clamp(2rem, 8vw, 3.75rem); text-shadow: 0 2px 20px rgba(0,0,0,0.3); margin-bottom: 1.25rem; text-align:center; width:100%;">Stop Renting,<br>Start Investing,<br>Start Earning</h1>
+      <p id="hero-subtheme" class="text-white/85 leading-relaxed" style="font-size: clamp(0.95rem, 3vw, 1.125rem); max-width: 560px; margin-bottom: 2rem; text-align:center;">Affordable, safe, and convenient Condominiums designed for modern Filipino families. Your dream home starts here.</p>
+      <div style="display:flex; flex-wrap:wrap; gap:12px; justify-content:center; margin-bottom:2rem;">
+       <div class="bg-white/15 backdrop-blur-sm border border-white/25 rounded-full px-5 py-2 flex items-center gap-2"><i data-lucide="shield-check" style="width:18px;height:18px;color:#FFD700;filter:drop-shadow(0 0 4px #FFD700);"></i> <span class="text-white text-sm font-medium">HLURB Licensed</span></div>
+       <div class="bg-white/15 backdrop-blur-sm border border-white/25 rounded-full px-5 py-2 flex items-center gap-2"><i data-lucide="badge-check" style="width:18px;height:18px;color:#FFD700;filter:drop-shadow(0 0 4px #FFD700);"></i> <span class="text-white text-sm font-medium">Pag-Ibig Accredited</span></div>
+      </div>
+      <a href="#units" class="inline-block font-bold text-base px-8 py-3.5 rounded-full transition-all bubble-hover shadow-lg" style="background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%); color: #1B4332; box-shadow: 0 0 0 2px #FFD700, 0 0 12px 2px #FFB300, 0 4px 20px rgba(255,179,0,0.45); background-size: 200% 200%; animation: goldShine 2.5s ease-in-out infinite;">Browse Units</a>
+     </div>
+    </div>
+   </section>
+   <section id="about" style="position:relative; background:none; z-index:1; padding: 80px 24px 60px;">
+    <div class="max-w-5xl mx-auto" style="position:relative; z-index:1;">
+     <div class="text-center mb-10">
+      <span class="font-semibold text-base tracking-widest uppercase white-glow-text">Who &amp; Why</span>
+      <h2 class="font-display text-4xl md:text-5xl font-bold text-white mt-2" id="about-title">Who and Why Finihomes?</h2>
+     </div>
+     <div class="flex flex-col md:flex-row gap-10 items-stretch">
+      <div class="w-full md:w-96 flex-shrink-0 flex justify-center">
+       <div class="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20 w-full" style="aspect-ratio:9/16; min-height: 520px;">
+        <video id="why-video" class="absolute inset-0 w-full h-full" src="Finihomes Video.mp4" autoplay loop playsinline style="object-fit:cover;">
+         Your browser does not support the video tag.
+        </video>
+       </div>
+      </div>
+      <div class="flex-1 flex flex-col gap-6 justify-center">
+       <div class="text-white/85 text-base leading-relaxed space-y-3 text-left sm:text-justify">
+        <p>Finihomes Residences is a trusted Philippine real estate developer committed to making homeownership accessible to every Filipino family. For over a decade, we have been building quality, affordable condominiums that blend modern design with practical living spaces — all situated in prime locations with easy access to schools, hospitals, transportation, and commercial centers.</p>
+        <p>Whether you are a first-time buyer, a young professional, or an OFW looking to invest back home, Finihomes offers flexible payment options — including Pag-Ibig financing, bank loans, and in-house terms — so you can move in sooner than you think.</p>
+       </div>
+       <div class="grid grid-cols-4 gap-3">
+        <div class="bubble-hover rounded-xl p-4 text-center shadow-sm" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(8px);border:1px solid rgba(255,215,0,0.3);">
+         <div class="font-display text-2xl font-bold" style="color:#FFD700;" id="stat-years">10+</div>
+         <div class="text-white/75 text-xs mt-1">Years</div>
+        </div>
+        <div class="bubble-hover rounded-xl p-4 text-center shadow-sm" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(8px);border:1px solid rgba(255,215,0,0.3);">
+         <div class="font-display text-2xl font-bold" style="color:#FFD700;" id="stat-units">3K+</div>
+         <div class="text-white/75 text-xs mt-1">Units</div>
+        </div>
+        <div class="bubble-hover rounded-xl p-4 text-center shadow-sm" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(8px);border:1px solid rgba(255,215,0,0.3);">
+         <div class="font-display text-2xl font-bold" style="color:#FFD700;" id="stat-projects">3</div>
+         <div class="text-white/75 text-xs mt-1">Projects</div>
+        </div>
+        <div class="bubble-hover rounded-xl p-4 text-center shadow-sm" style="background:rgba(255,255,255,0.12);backdrop-filter:blur(8px);border:1px solid rgba(255,215,0,0.3);">
+         <div class="font-display text-2xl font-bold" style="color:#FFD700;" id="stat-satisfaction">97%</div>
+         <div class="text-white/75 text-xs mt-1">Satisfaction</div>
+        </div>
+       </div>
+       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="flex items-start gap-3">
+         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(255,215,0,0.12);border:1.5px solid #FFD700;box-shadow:0 0 8px rgba(255,215,0,0.35);">
+          <i data-lucide="shield-check" class="text-cream" style="width:18px;height:18px;"></i>
+         </div>
+         <div>
+          <h3 class="font-display font-bold text-white text-base mb-0.5">Trusted Developer</h3>
+          <p class="text-white/65 text-sm leading-relaxed">DHSUD licensed &amp; Pag-IBIG accredited, 10+ years on schedule.</p>
+         </div>
+        </div>
+        <div class="flex items-start gap-3">
+         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(255,215,0,0.12);border:1.5px solid #FFD700;box-shadow:0 0 8px rgba(255,215,0,0.35);">
+          <i data-lucide="wallet" class="text-cream" style="width:18px;height:18px;"></i>
+         </div>
+         <div>
+          <h3 class="font-display font-bold text-white text-base mb-0.5">Flexible Payment</h3>
+          <p class="text-white/65 text-sm leading-relaxed">Pag-IBIG, bank loans, or in-house — payment that fits your budget.</p>
+         </div>
+        </div>
+        <div class="flex items-start gap-3">
+         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(255,215,0,0.12);border:1.5px solid #FFD700;box-shadow:0 0 8px rgba(255,215,0,0.35);">
+          <i data-lucide="map-pin" class="text-cream" style="width:18px;height:18px;"></i>
+         </div>
+         <div>
+          <h3 class="font-display font-bold text-white text-base mb-0.5">Prime Locations</h3>
+          <p class="text-white/65 text-sm leading-relaxed">Near schools, hospitals, malls &amp; transport in Metro Manila and Bulacan.</p>
+         </div>
+        </div>
+        <div class="flex items-start gap-3">
+         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(255,215,0,0.12);border:1.5px solid #FFD700;box-shadow:0 0 8px rgba(255,215,0,0.35);">
+          <i data-lucide="waves" class="text-cream" style="width:18px;height:18px;"></i>
+         </div>
+         <div>
+          <h3 class="font-display font-bold text-white text-base mb-0.5">Resort-Style Amenities</h3>
+          <p class="text-white/65 text-sm leading-relaxed">Pool, landscaped park, A/C lounge, and 24/7 security.</p>
+         </div>
+        </div>
+        <div class="flex items-start gap-3">
+         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(255,215,0,0.12);border:1.5px solid #FFD700;box-shadow:0 0 8px rgba(255,215,0,0.35);">
+          <i data-lucide="trending-up" class="text-cream" style="width:18px;height:18px;"></i>
+         </div>
+         <div>
+          <h3 class="font-display font-bold text-white text-base mb-0.5">Smart Investment</h3>
+          <p class="text-white/65 text-sm leading-relaxed">Stop renting, build equity. Ideal for OFWs and rental investors.</p>
+         </div>
+        </div>
+        <div class="flex items-start gap-3">
+         <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background:rgba(255,215,0,0.12);border:1.5px solid #FFD700;box-shadow:0 0 8px rgba(255,215,0,0.35);">
+          <i data-lucide="users" class="text-cream" style="width:18px;height:18px;"></i>
+         </div>
+         <div>
+          <h3 class="font-display font-bold text-white text-base mb-0.5">Community Living</h3>
+          <p class="text-white/65 text-sm leading-relaxed">Safe, family-friendly environment with 97% homeowner satisfaction.</p>
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section>
+   </div><!-- end hero-wrapper -->
+   <section id="roadmap" class="py-20 px-4 md:px-8 fade-section">
+    <div class="max-w-5xl mx-auto text-center"><span class="font-semibold text-sm tracking-widest uppercase white-glow-text">Our Progress</span>
+     <h2 class="font-display text-3xl md:text-4xl font-bold mt-2 mb-6 white-glow-text">Development Roadmap</h2>
+
+     
+     <div class="hidden md:block relative w-full mb-20" id="desktop-roadmap" style="height: 28px;">
+      <div id="roadmap-line" class="absolute h-1 bg-leaf/20" style="top: 50%; transform: translateY(-50%);"></div>
+      <div class="grid md:grid-cols-3 gap-8 absolute inset-0" id="roadmap-dots-row">
+       <div class="flex items-center justify-center relative" id="rdot-0">
+        <div class="roadmap-dot completed relative z-10" style="width:20px;height:20px;border-width:3px;"></div>
+        <span class="white-glow-text absolute roadmap-label" style="top: calc(50% + 14px);">2016 <br> Completed Finihomes Marulas</span>
+       </div>
+       <div class="flex items-center justify-center relative" id="rdot-1">
+        <div class="roadmap-dot completed relative z-10" style="width:20px;height:20px;border-width:3px;"></div>
+        <span class="white-glow-text absolute roadmap-label" style="top: calc(50% + 14px);">2022 <br> Completed Buildersville Residences</span>
+       </div>
+       <div class="flex items-center justify-center relative" id="rdot-2">
+        <div class="roadmap-dot relative z-10" style="width:20px;height:20px;border-width:3px;"></div>
+        <span class="ongoing-glow font-semibold absolute roadmap-label" style="top: calc(50% + 14px);">Ongoing <br> Finihomes Marilao</span>
+       </div>
+      </div>
+     </div>
+
+     
+     <div class="hidden md:grid md:grid-cols-3 gap-8">
+      <div class="bubble-hover glass-blur-card rounded-2xl overflow-hidden cursor-pointer shadow-lg" onclick="openProjectModal(0)">
+       <div class="h-56 overflow-hidden">
+        <img src="marulas.png" alt="Finihomes Marulas" class="w-full h-full object-cover">
+       </div>
+       <div class="p-5 text-left">
+        <h3 class="font-display font-bold text-lg">Finihomes Marulas</h3>
+        <div class="flex items-center gap-1 mt-2 text-sm" style="color:#ffffff;">
+         <i data-lucide="map-pin" style="width:14px;height:14px;"></i>Ramon Delfin, Valenzuela, Metro Manila
+        </div>
+        <div class="mt-2">
+         <span class="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style="background:rgba(254,202,202,0.18);color:#fca5a5;">Fully Occupied</span>
+        </div>
+        <div class="mt-4 flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-semibold transition-colors" style="background:rgba(255,215,0,0.12);color:#FFD700;">
+         <i data-lucide="info" style="width:15px;height:15px;"></i> Click for more details
+        </div>
+       </div>
+      </div>
+      <div class="bubble-hover glass-blur-card rounded-2xl overflow-hidden cursor-pointer shadow-lg" onclick="openProjectModal(1)">
+       <div class="h-56 overflow-hidden">
+        <img src="buildersville.png" alt="Buildersville Residences" class="w-full h-full object-cover">
+       </div>
+       <div class="p-5 text-left">
+        <h3 class="font-display font-bold text-lg">Buildersville Residences</h3>
+        <div class="flex items-center gap-1 mt-2 text-sm" style="color:#ffffff;">
+         <i data-lucide="map-pin" style="width:14px;height:14px;"></i>Marindal, Valenzuela, Metro Manila
+        </div>
+        <div class="mt-2">
+         <span class="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style="background:rgba(254,202,202,0.18);color:#fca5a5;">Fully Occupied</span>
+        </div>
+        <div class="mt-4 flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-semibold transition-colors" style="background:rgba(255,215,0,0.12);color:#FFD700;">
+         <i data-lucide="info" style="width:15px;height:15px;"></i> Click for more details
+        </div>
+       </div>
+      </div>
+      <div class="bubble-hover glass-blur-card rounded-2xl overflow-hidden cursor-pointer shadow-lg" onclick="openProjectModal(2)">
+       <div class="h-56 overflow-hidden">
+        <img src="marilao.jpg" alt="Finihomes Marilao" class="w-full h-full object-cover">
+       </div>
+       <div class="p-5 text-left">
+        <h3 class="font-display font-bold text-lg">Finihomes Marilao</h3>
+        <div class="flex items-center gap-1 mt-2 text-sm" style="color:#ffffff;">
+         <i data-lucide="map-pin" style="width:14px;height:14px;"></i>Ibayo, Marilao, Bulacan
+        </div>
+        <div class="mt-2">
+         <span class="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style="background:rgba(167,243,208,0.18);color:#6ee7b7;">Ready for Occupancy</span>
+        </div>
+        <div class="mt-4 flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-sm font-semibold transition-colors" style="background:rgba(255,215,0,0.12);color:#FFD700;">
+         <i data-lucide="info" style="width:15px;height:15px;"></i> Click for more details
+        </div>
+       </div>
+      </div>
+     </div>
+
+     
+     <div class="md:hidden relative" id="mobile-roadmap-wrap">
+
+      <div id="mobile-roadmap-line" style="position:absolute; width:2px; background:rgba(45,106,79,0.2); left:107px; top:0; height:100%; z-index:0;"></div>
+
+      <div class="flex items-center" style="margin-bottom:60px; position:relative;">
+       <div class="flex-shrink-0 text-right" style="width:88px; padding-right:12px;">
+        <span class="white-glow-text text-xs leading-snug">2016<br>Completed<br>Finihomes<br>Marulas</span>
+       </div>
+       <div class="flex-shrink-0 flex items-center justify-center" style="width:22px; z-index:1;">
+        <div class="roadmap-dot completed" id="mob-dot-0" style="width:18px;height:18px;border-width:3px;"></div>
+       </div>
+       <div class="flex-1 bubble-hover glass-blur-card rounded-2xl overflow-hidden cursor-pointer shadow-lg" style="margin-left:28px;" onclick="openProjectModal(0)">
+        <div class="h-44 overflow-hidden">
+         <img src="marulas.png" alt="Finihomes Marulas" class="w-full h-full object-cover">
+        </div>
+        <div class="p-3 text-left">
+         <h3 class="font-display font-bold text-sm" style="color:#ffffff;">Finihomes Marulas</h3>
+         <div class="flex items-center gap-1 mt-1 text-xs" style="color:#ffffff;">
+          <i data-lucide="map-pin" style="width:11px;height:11px;"></i>Valenzuela, Metro Manila
+         </div>
+         <div class="mt-1">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:rgba(254,202,202,0.18);color:#fca5a5;">Fully Occupied</span>
+         </div>
+         <div class="mt-2 flex items-center justify-center gap-1 rounded-lg py-1.5 px-2 text-xs font-semibold transition-colors" style="background:rgba(255,215,0,0.12);color:#FFD700;">
+          <i data-lucide="info" style="width:12px;height:12px;"></i> Details
+         </div>
+        </div>
+       </div>
+      </div>
+
+      <div class="flex items-center" style="margin-bottom:60px; position:relative;">
+       <div class="flex-shrink-0 text-right" style="width:88px; padding-right:12px;">
+        <span class="white-glow-text text-xs leading-snug">2022<br>Completed<br>Buildersville<br>Residences</span>
+       </div>
+       <div class="flex-shrink-0 flex items-center justify-center" style="width:22px; z-index:1;">
+        <div class="roadmap-dot completed" id="mob-dot-1" style="width:18px;height:18px;border-width:3px;"></div>
+       </div>
+       <div class="flex-1 bubble-hover glass-blur-card rounded-2xl overflow-hidden cursor-pointer shadow-lg" style="margin-left:28px;" onclick="openProjectModal(1)">
+        <div class="h-44 overflow-hidden">
+         <img src="buildersville.png" alt="Buildersville Residences" class="w-full h-full object-cover">
+        </div>
+        <div class="p-3 text-left">
+         <h3 class="font-display font-bold text-sm" style="color:#ffffff;">Buildersville Residences</h3>
+         <div class="flex items-center gap-1 mt-1 text-xs" style="color:#ffffff;">
+          <i data-lucide="map-pin" style="width:11px;height:11px;"></i>Valenzuela, Metro Manila
+         </div>
+         <div class="mt-1">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:rgba(254,202,202,0.18);color:#fca5a5;">Fully Occupied</span>
+         </div>
+         <div class="mt-2 flex items-center justify-center gap-1 rounded-lg py-1.5 px-2 text-xs font-semibold transition-colors" style="background:rgba(255,215,0,0.12);color:#FFD700;">
+          <i data-lucide="info" style="width:12px;height:12px;"></i> Details
+         </div>
+        </div>
+       </div>
+      </div>
+
+      <div class="flex items-center" style="position:relative;">
+       <div class="flex-shrink-0 text-right" style="width:88px; padding-right:12px;">
+        <span class="ongoing-glow font-semibold text-xs leading-snug">Ongoing<br>Finihomes<br>Marilao</span>
+       </div>
+       <div class="flex-shrink-0 flex items-center justify-center" style="width:22px; z-index:1;">
+        <div class="roadmap-dot" id="mob-dot-2" style="width:18px;height:18px;border-width:3px;"></div>
+       </div>
+       <div class="flex-1 bubble-hover glass-blur-card rounded-2xl overflow-hidden cursor-pointer shadow-lg" style="margin-left:28px;" onclick="openProjectModal(2)">
+        <div class="h-44 overflow-hidden">
+         <img src="marilao.jpg" alt="Finihomes Marilao" class="w-full h-full object-cover">
+        </div>
+        <div class="p-3 text-left">
+         <h3 class="font-display font-bold text-sm" style="color:#ffffff;">Finihomes Marilao</h3>
+         <div class="flex items-center gap-1 mt-1 text-xs" style="color:#ffffff;">
+          <i data-lucide="map-pin" style="width:11px;height:11px;"></i>Ibayo, Marilao, Bulacan
+         </div>
+         <div class="mt-1">
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:rgba(167,243,208,0.18);color:#6ee7b7;">Ready for Occupancy</span>
+         </div>
+         <div class="mt-2 flex items-center justify-center gap-1 rounded-lg py-1.5 px-2 text-xs font-semibold transition-colors" style="background:rgba(255,215,0,0.12);color:#FFD700;">
+          <i data-lucide="info" style="width:12px;height:12px;"></i> Details
+         </div>
+        </div>
+       </div>
+      </div>
+
+     </div>
+     <script>
+     (function() {
+       function positionMobLine() {
+         var wrap = document.getElementById('mobile-roadmap-wrap');
+         var line = document.getElementById('mobile-roadmap-line');
+         var dot0 = document.getElementById('mob-dot-0');
+         var dot2 = document.getElementById('mob-dot-2');
+         if (!wrap || !line || !dot0 || !dot2) return;
+         var wrapRect = wrap.getBoundingClientRect();
+         var d0Rect = dot0.getBoundingClientRect();
+         var d2Rect = dot2.getBoundingClientRect();
+         var top = d0Rect.top + d0Rect.height / 2 - wrapRect.top;
+         var bottom = d2Rect.top + d2Rect.height / 2 - wrapRect.top;
+         line.style.top = top + 'px';
+         line.style.height = (bottom - top) + 'px';
+         line.style.left = (d0Rect.left + d0Rect.width / 2 - wrapRect.left - 1) + 'px';
+       }
+       document.addEventListener('DOMContentLoaded', function() {
+         requestAnimationFrame(function() { requestAnimationFrame(positionMobLine); });
+       });
+       window.addEventListener('resize', positionMobLine);
+     })();
+     </script>
+    </div>
+   </section>
+   <section id="amenities" class="py-20 px-4 md:px-8 fade-section">
+    <div class="max-w-5xl mx-auto text-center"><span class="font-semibold text-sm tracking-widest uppercase white-glow-text">Live in Comfort</span>
+     <h2 class="font-display text-3xl md:text-4xl font-bold mt-2 mb-10 white-glow-text">World-Class Amenities</h2>
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-[88%] md:max-w-5xl mx-auto" id="amenities-grid">
+     </div>
+    </div>
+   </section>
+   <section id="partners" class="py-20 px-4 md:px-8 fade-section">
+    <div class="max-w-5xl mx-auto text-center"><span class="font-semibold text-sm tracking-widest uppercase white-glow-text" style="">Flexible Payment</span>
+     <h2 class="font-display text-3xl md:text-4xl font-bold text-white mt-2 mb-10 white-glow-text">Accepted Partners</h2>
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[88%] md:max-w-5xl mx-auto">
+      
+      <div class="bubble-hover glass-blur-card rounded-2xl p-7 text-center shadow-lg flex flex-col">
+       <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(167,243,208,0.15);">
+        <i data-lucide="landmark" style="width:32px;height:32px;color:#ffffff;"></i>
+       </div>
+       <h3 class="font-display font-bold text-lg mb-2">Pag-IBIG Fund</h3>
+       <p class="text-sm leading-relaxed mb-3" style="color:#ffffff;">Government-backed housing fund offering the lowest interest rates for Filipino workers.</p>
+       <ul class="text-left text-sm space-y-1 mt-auto">
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>As low as 3% interest</li>
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Up to 30-year terms</li>
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Low down payment</li>
+       </ul>
+      </div>
+      
+      <div class="bubble-hover glass-blur-card rounded-2xl p-7 text-center shadow-lg flex flex-col">
+       <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(167,243,208,0.15);">
+        <i data-lucide="building" style="width:32px;height:32px;color:#ffffff;"></i>
+       </div>
+       <h3 class="font-display font-bold text-lg mb-2">Bank Financing</h3>
+       <p class="text-sm leading-relaxed mb-3" style="color:#ffffff;">Partner banks provide competitive mortgage rates with flexible terms for qualified buyers.</p>
+       <ul class="text-left text-sm space-y-1 mt-auto">
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Competitive rates</li>
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Fast approval</li>
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Flexible terms</li>
+       </ul>
+      </div>
+      
+      <div class="bubble-hover glass-blur-card rounded-2xl p-7 text-center shadow-lg flex flex-col">
+       <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(167,243,208,0.15);">
+        <i data-lucide="calendar" style="width:32px;height:32px;color:#ffffff;"></i>
+       </div>
+       <h3 class="font-display font-bold text-lg mb-2">Deferred Financing</h3>
+       <p class="text-sm leading-relaxed mb-3" style="color:#ffffff;">Pay later with structured deferred payment schemes designed for flexible cash flow management.</p>
+       <ul class="text-left text-sm space-y-1 mt-auto">
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Structured payment schedule</li>
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Grace period options</li>
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Ideal for pre-selling units</li>
+       </ul>
+      </div>
+      
+      <div class="bubble-hover glass-blur-card rounded-2xl p-7 text-center shadow-lg flex flex-col">
+       <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(167,243,208,0.15);">
+        <i data-lucide="banknote" style="width:32px;height:32px;color:#ffffff;"></i>
+       </div>
+       <h3 class="font-display font-bold text-lg mb-2">Spot Cash</h3>
+       <p class="text-sm leading-relaxed mb-3" style="color:#ffffff;">Pay in full and enjoy the best discounts and priority unit selection available.</p>
+       <ul class="text-left text-sm space-y-1 mt-auto">
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Maximum discounts</li>
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Priority unit selection</li>
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Fastest turnover</li>
+       </ul>
+      </div>
+      
+      <div class="bubble-hover glass-blur-card rounded-2xl p-7 text-center shadow-lg flex flex-col col-span-1 md:col-span-2 w-full md:w-1/2 mx-auto">
+       <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background:rgba(167,243,208,0.15);">
+        <i data-lucide="home" style="width:32px;height:32px;color:#ffffff;"></i>
+       </div>
+       <h3 class="font-display font-bold text-lg mb-2">In-House Financing</h3>
+       <p class="text-sm leading-relaxed mb-3" style="color:#ffffff;">Our own financing program with easy requirements — perfect for those who need quick approval.</p>
+       <ul class="text-left text-sm space-y-1 mt-auto">
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Minimal requirements</li>
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>No income docs needed</li>
+        <li class="flex items-center gap-2" style="color:#ffffff;"><i data-lucide="check-circle" style="width:14px;height:14px;color:#a7f3d0;"></i>Move in within weeks</li>
+       </ul>
+      </div>
+     </div>
+    </div>
+   </section>
+   <section id="testimonials" class="py-20 px-4 md:px-8 fade-section overflow-hidden">
+    <div class="max-w-5xl mx-auto text-center"><span class="font-semibold text-sm tracking-widest uppercase white-glow-text">What homeowners say</span>
+     <h2 class="font-display text-3xl md:text-4xl font-bold text-white mt-2 mb-10 white-glow-text">Testimonials</h2>
+    </div>
+    <div class="relative overflow-hidden max-w-5xl mx-auto">
+     <div class="testimonial-track" id="testimonial-track"></div>
+    </div>
+   </section>
+   <section id="units" class="py-6 md:py-10 px-4 md:px-8 fade-section">
+    <div class="max-w-5xl mx-auto text-center"><span class="font-semibold text-sm tracking-widest uppercase white-glow-text">Explore Options</span>
+     <h2 class="font-display text-3xl md:text-4xl font-bold text-white mt-2 mb-0 white-glow-text">Available Units</h2>
+     <div class="flex justify-center w-full" style="margin-top:-8px;">
+      <div class="overflow-hidden w-full" style="height: 720px; display: flex; align-items: center;">
+       <div class="carousel-track flex items-center w-full" id="unit-carousel"></div>
+      </div>
+     </div>
+    </div>
+   </section>
+   <section id="contact" class="py-20 px-4 md:px-8 fade-section">
+    <div class="max-w-5xl mx-auto" style="position:relative; z-index:1;">
+     <div class="text-center mb-10"><span class="font-semibold text-sm tracking-widest uppercase white-glow-text">Get in Touch</span>
+      <h2 class="font-display text-3xl md:text-4xl font-bold text-white mt-2 white-glow-text" id="contact-title">Contact Us</h2>
+     </div>
+     
+     <div class="flex justify-center mb-10">
+      <form id="contact-form" name="contact" method="POST" data-netlify="true" netlify-honeypot="bot-field" class="space-y-4 w-full max-w-5xl">
+       <input type="hidden" name="form-name" value="contact">
+       <p class="hidden"><label>Don't fill this out if you're human: <input name="bot-field"></label></p>
+       <div>
+        <label for="cf-name" class="block text-sm font-medium text-white/90 mb-1">Full Name</label><input id="cf-name" name="name" type="text" required class="w-full px-4 py-2.5 rounded-xl border border-white/30 bg-white/10 text-white placeholder-white/40 focus:border-cream focus:ring-1 focus:ring-cream outline-none text-sm transition-colors">
+       </div>
+       <div>
+        <label for="cf-email" class="block text-sm font-medium text-white/90 mb-1">Email</label><input id="cf-email" name="email" type="email" required class="w-full px-4 py-2.5 rounded-xl border border-white/30 bg-white/10 text-white placeholder-white/40 focus:border-cream focus:ring-1 focus:ring-cream outline-none text-sm transition-colors">
+       </div>
+       <div>
+        <label for="cf-phone" class="block text-sm font-medium text-white/90 mb-1">Contact No.</label><input id="cf-phone" name="phone" type="tel" class="w-full px-4 py-2.5 rounded-xl border border-white/30 bg-white/10 text-white placeholder-white/40 focus:border-cream focus:ring-1 focus:ring-cream outline-none text-sm transition-colors">
+       </div>
+       <div>
+        <label for="cf-unit" class="block text-sm font-medium text-white/90 mb-1">Interested Unit</label> <select id="cf-unit" name="unit" class="w-full px-4 py-2.5 rounded-xl border border-white/30 bg-leafDark text-white focus:border-cream focus:ring-1 focus:ring-cream outline-none text-sm transition-colors"> <option value="">Select a unit type</option> <option>Studio</option><option>1 Bedroom</option><option>2 Bedroom</option><option>3 Bedroom</option> </select>
+       </div>
+       <div>
+        <label for="cf-msg" class="block text-sm font-medium text-white/90 mb-1">Message</label><textarea id="cf-msg" name="message" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-white/30 bg-white/10 text-white placeholder-white/40 focus:border-cream focus:ring-1 focus:ring-cream outline-none text-sm transition-colors resize-none"></textarea>
+       </div><button type="submit" id="submit-btn" class="w-full bg-cream text-leafDark font-semibold py-3 rounded-xl hover:bg-yellow-300 transition-all bubble-hover">Send Inquiry</button>
+
+       <div class="flex flex-row gap-3 pt-2">
+        <a id="wa-link" href="https://wa.me/639777730872" target="_blank"
+           class="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl font-semibold text-sm transition-all bubble-hover"
+           style="background:#25D366; color:#fff;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          Inquire on WhatsApp
+        </a>
+        <a id="fb-link" href="https://m.me/1050333154835743" target="_blank"
+           class="flex-1 flex items-center justify-center gap-2.5 py-3 px-4 rounded-xl font-semibold text-sm transition-all bubble-hover"
+           style="background: linear-gradient(135deg, #0084FF, #A033FF); color:#fff;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0;">
+            <path d="M12 0C5.373 0 0 4.974 0 11.111c0 3.498 1.744 6.614 4.469 8.652V24l4.088-2.242c1.092.301 2.246.464 3.443.464 6.627 0 12-4.975 12-11.111S18.627 0 12 0zm1.191 14.963l-3.055-3.26-5.963 3.26L10.732 8l3.131 3.259L19.752 8l-6.561 6.963z"/>
+          </svg>
+          Inquire on Messenger
+        </a>
+       </div>
+      </form>
+     </div>
+     
+
+    </div>
+   </section>
+   <section id="faq" class="py-20 px-4 md:px-8 fade-section">
+    <div class="max-w-5xl mx-auto text-center"><span class="font-semibold text-sm tracking-widest uppercase white-glow-text">Common Questions</span>
+     <h2 class="font-display text-3xl md:text-4xl font-bold text-white mt-2 mb-10 white-glow-text">FAQ</h2>
+     <div class="space-y-3 text-left max-w-5xl mx-auto" id="faq-container"></div>
+    </div>
+   </section>
+   <footer class="py-6 px-4 md:px-8 border-t border-white/20" style="position:relative; background:transparent;">
+     <div style="position:absolute; inset:0; background: rgba(10,30,10,0.55); pointer-events:none; z-index:0;"></div>
+     <div style="position:relative; z-index:1;">
+    <div class="max-w-5xl mx-auto">
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-16 mb-6">
+      <div class="col-span-1">
+       <div class="flex items-center gap-2 mb-3">
+        <img src="finihomes_pfp.png" alt="Finihomes Square Logo" class="w-8 h-8 rounded-full object-cover" /><span class="font-display font-bold white-glow-text">Finihomes</span>
+       </div>
+       <p class="text-white text-sm leading-relaxed">Affordable condominiums for modern Filipino families. DHSUD Licensed &amp; Pag-IBIG Accredited.</p>
+      </div>
+      <div class="col-span-1 md:col-span-2 grid grid-cols-2 gap-8 md:contents">
+      <div>
+       <h4 class="font-semibold white-glow-text mb-3 text-sm">Quick Links</h4>
+       <div class="space-y-2">
+        <a href="#about" class="block text-white text-sm hover:text-white/70 transition-colors">About Us</a><a href="#roadmap" class="block text-white text-sm hover:text-white/70 transition-colors">Projects</a><a href="#units" class="block text-white text-sm hover:text-white/70 transition-colors">Available Units</a><a href="#contact" class="block text-white text-sm hover:text-white/70 transition-colors">Contact</a>
+       </div>
+      </div>
+      <div>
+       <h4 class="font-semibold white-glow-text mb-3 text-sm">Contact Info</h4>
+       <div class="space-y-2 text-white text-sm">
+        <div id="footer-email" class="space-y-1">
+         <div class="flex items-center gap-1.5"><i data-lucide="mail" style="width:13px;height:13px;flex-shrink:0;"></i>joven.rebuyas910@gmail.com</div>
+         <div class="flex items-center gap-1.5"><i data-lucide="mail" style="width:13px;height:13px;flex-shrink:0;"></i>johnpauldumigpi.rebuyas@gmail.com</div>
+        </div>
+        <div id="footer-phone" class="space-y-1">
+         <div class="flex items-center gap-1.5"><i data-lucide="phone" style="width:13px;height:13px;flex-shrink:0;"></i>+63-945-744-6025</div>
+         <div class="flex items-center gap-1.5"><i data-lucide="phone" style="width:13px;height:13px;flex-shrink:0;"></i>+63-977-773-0872</div>
+        </div>
+        <div class="flex items-center gap-1.5">
+         <i data-lucide="map-pin" style="width:13px;height:13px;flex-shrink:0;"></i>
+         <span id="footer-address">Ibayo, Marilao, 3019 Bulacan</span>
+        </div>
+       </div>
+      </div>
+      </div>
+     </div>
+     <div class="border-t border-white/20 pt-4 text-center text-white text-xs">
+      © 2016 Finihomes Residences. All rights reserved.
+     </div>
+    </div>
+   </div></footer>
+   <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" id="modal-content" onclick="event.stopPropagation()"></div>
+   </div>
+   <div class="toast" id="toast"></div>
+  </div>
+  <script>
+
+// ── Auto-fallback: if image fails to load, try lowercase + other extension ──
+document.addEventListener('error', function(e) {
+  const img = e.target;
+  if (img.tagName !== 'IMG' || img.dataset.extFallback) return;
+  const src = img.src;
+  const path = src.replace(window.location.origin + '/', '').replace(window.location.origin, '');
+  const lower = path.toLowerCase();
+
+  // Step 1: try lowercase same extension
+  if (!img.dataset.extFallback) {
+    img.dataset.extFallback = '1';
+    if (lower !== path) { img.src = lower; return; }
+  }
+
+  // Step 2: try swapping extension (jpg↔png), lowercase
+  if (img.dataset.extFallback === '1') {
+    img.dataset.extFallback = '2';
+    if (lower.match(/\.png(\?|$)/i)) { img.src = lower.replace(/\.png(\?|$)/i, '.jpg$1'); return; }
+    if (lower.match(/\.jpg(\?|$)/i)) { img.src = lower.replace(/\.jpg(\?|$)/i, '.png$1'); return; }
+  }
+}, true);
+
+const projects = [
+  {
+    name: 'Finihomes Marulas', location: 'Ramon Delfin, Valenzuela, Metro Manila',
+    status: 'Fully Occupied', buildings: 5, units: '2,000+',
+    nearby: ['SM Valenzuela (5 min)', 'Fatima University (10 min)', 'Valenzuela Medical Center (8 min)', 'LRT Line 1 Extension (15 min)'],
+    desc: 'Our flagship project featuring mid-rise condominiums with complete amenities. Strategically located near major commercial and educational institutions in Valenzuela City.',
+    mapQuery: '14.6699415,120.983811'
+  },
+  {
+    name: 'Buildersville Residences', location: 'Marindal, Valenzuela, Metro Manila',
+    status: 'Fully Occupied', buildings: 3, units: '1,500+',
+    nearby: ['Puregold Marindal (3 min)', 'Valenzuela City Hall (10 min)', 'Karuhatan Market (5 min)', 'NLEX Interchange (12 min)'],
+    desc: 'A modern residential community offering affordable yet premium living spaces. Currently under development with Phase 2 units now available for reservation.',
+    mapQuery: '14.6963116,120.9612042'
+  },
+  {
+    name: 'Finihomes Marilao', location: 'Ibayo, Marilao, Bulacan',
+    status: 'Ready for Occupancy', buildings: 6, units: '400+',
+    nearby: ['SM Marilao (8 min)', 'Marilao Municipal Hall (5 min)', 'Philippine Arena (20 min)', 'NLEX Marilao Exit (7 min)'],
+    desc: 'Our newest development in the fast-growing Bulacan corridor. Pre-selling now with exclusive early-bird pricing and flexible payment schemes for reserving buyers.',
+    mapQuery: '14.7513713,120.953596'
+  }
+];
+
+const amenities = [
+  {
+    name: '24/7 Security',
+    img: 'security.jpg',
+    imgPosition: '50% 70%',
+    desc: 'Round-the-clock security personnel with CCTV monitoring for your peace of mind.',
+    extras: ['CCTV surveillance', 'Guard house at entry', 'Visitor management system']
+  },
+  {
+    name: 'Announcement Board',
+    img: 'board.jpg',
+    imgPosition: '50% 50%',
+    desc: 'Centrally located announcement board to keep residents informed of community news and updates.',
+    extras: ['Community notices', 'Event announcements', 'HOA updates and reminders']
+  },
+  {
+    name: 'Commercial Center',
+    img: 'commercial.jpg',
+    imgPosition: '50% 50%',
+    desc: 'On-site commercial area with shops and services for residents\' everyday needs.',
+    extras: ['Convenience store', 'Laundry shop', 'Food stalls']
+  },
+  {
+    name: 'Landscaped Park',
+    img: 'park.jpg',
+    imgPosition: '50% 55%',
+    desc: 'Beautifully designed green spaces with walking paths and seating areas.',
+    extras: ['Jogging path', 'Garden benches', 'Playground for kids']
+  },
+  {
+    name: 'Locker Cabinet',
+    img: 'locker.jpg',
+    imgPosition: '50% 50%',
+    desc: 'Secure locker cabinets for residents to safely store personal belongings within the building.',
+    extras: ['Individual lockers per unit', 'Secure locking mechanism', 'Conveniently located near lobby']
+  },
+  {
+    name: 'Lounge',
+    img: 'lounge.jpg',
+    imgPosition: '50% 60%',
+    desc: 'Air-conditioned lounge area where residents can relax, work, or socialize.',
+    extras: ['Air-conditioned space', 'Comfortable seating', 'Available for events and gatherings']
+  },
+  {
+    name: 'Multi-Function Hall',
+    img: 'hall.jpg',
+    imgPosition: '50% 50%',
+    desc: 'Spacious multi-purpose hall available for events, gatherings, and community activities.',
+    extras: ['Flexible event space', 'Available for reservation', 'Suitable for parties and meetings']
+  },
+  {
+    name: 'Parking Lot',
+    img: 'parking.jpg',
+    imgPosition: '50% 75%',
+    desc: 'Dedicated parking spaces for residents and visitors within the compound.',
+    extras: ['Covered parking slots', 'Visitor parking area', 'Well-lit at night']
+  },
+  {
+    name: 'Stairway & Elevator',
+    img: 'way.jpg',
+    imgPosition: '50% 50%',
+    desc: 'Well-maintained stairways and elevators for safe and convenient access to all floors.',
+    extras: ['Passenger elevators', 'Emergency stairways', 'Accessible for PWDs']
+  },
+  {
+    name: 'Swimming Pool',
+    img: 'pool.jpg',
+    imgPosition: '50% 55%',
+    desc: 'Resort-style swimming pool for relaxation and recreation for all ages.',
+    extras: ['Adult pool', 'Kiddie pool', 'Pool-side lounge area']
+  },
+];
+
+const testimonials = [
+  { name: 'Maria Santos', text: 'Moving to Finihomes was the best decision for our family. The amenities are world-class and the community is wonderful. We feel safe and happy every day!', rating: 5 },
+  { name: 'Juan Dela Cruz', text: 'As an OFW, I wanted a secure investment back home. Finihomes made it easy with Pag-Ibig financing. Now my family has a beautiful home to call their own.', rating: 5 },
+  { name: 'Ana Reyes', text: 'The in-house financing made it possible for me to get my first condo. The process was smooth and the staff were very helpful throughout. Highly recommended!', rating: 5 },
+  { name: 'Carlos Mendoza', text: 'I compared many developers and Finihomes offered the best value. Great location, modern design, and affordable monthly payments. Worth every peso!', rating: 4 },
+  { name: 'Lisa Garcia', text: 'The swimming pool and landscaped gardens are my favorite. It feels like living in a resort! The 24/7 security gives me peace of mind as a single mom.', rating: 5 },
+  { name: 'Roberto Cruz', text: 'From reservation to turnover, Finihomes delivered exactly what they promised. No hidden fees, no delays. A trustworthy developer!', rating: 5 }
+];
+
+const units = [
+  { name: 'Studio', size: '18.5–19 sqm', price: '₱1.66M – ₱1.71M', amort: '20 Years = ₱11k–₱12k/mo <br> 30 Years = ₱10k/mo', beds: 'Studio', bath: '1', img: 'studio.png', features: ['Open layout', 'Built-in closet', 'Kitchen counter', 'Balcony ready'], ideal: 'Students, young professionals, or investors looking for rental income.' },
+  { name: '1 Bedroom', size: '24–29 sqm', price: '₱2.15M – ₱2.33M', amort: '20 Years = ₱15k–₱18k/mo <br> 30 Years = ₱13k–₱16k/mo', beds: '1 Bedroom', bath: '1', img: '1br.png', features: ['Separate bedroom', 'Living & dining area', 'T&B with provisions', 'Balcony'], ideal: 'Young couples or small families starting their home journey.' },
+  { name: '2 Bedroom', size: '33–40.5 sqm', price: '₱3.03M – ₱3.64M', amort: '20 Years = ₱21k–₱26k/mo <br> 30 Years = ₱18k–₱22k/mo', beds: '2 Bedrooms', bath: '1', img: '2br.png', features: ['2 separate bedrooms', 'Spacious living area', 'Kitchen with counter', 'Service balcony'], ideal: 'Growing families who need extra space and privacy.' },
+  { name: '3 Bedroom', size: '49–49.5 sqm', price: '₱4.39M – ₱4.67M', amort: '20 Years = ₱31k–₱32k/mo <br> 30 Years = ₱26k–₱27k/mo', beds: '3 Bedrooms', bath: '2', img: '3br.png', features: ['3 spacious bedrooms', 'Large living & dining', 'Kitchen with counter', 'Dual service areas'], ideal: 'Large families who want comfort and plenty of space for everyone.' }
+];
+
+const faqs = [
+  { q: 'What are the payment options available?', a: 'We offer five flexible payment schemes — Spot Cash, Deferred Cash, In-House Financing, Bank Financing, and Pag-IBIG Fund Financing. Our team will help you find the best option based on your financial situation.' },
+  { q: 'How much is the reservation fee?', a: 'The reservation fee is ₱20,000 for all unit types. This amount is applied toward your total contract price.' },
+  { q: 'Is Finihomes HLURB or DHSUD licensed?', a: 'Yes. All Finihomes projects are fully licensed by DHSUD and accredited by Pag-IBIG Fund, ensuring that your investment is secure and protected.' },
+  { q: 'Can OFWs buy a unit?', a: 'Absolutely. We have a streamlined process for OFW buyers, including online reservation and flexible documentation requirements. Pag-IBIG OFW financing is also available.' },
+  { q: 'When can I move in?', a: 'Finihomes Square Marilao is already Ready for Occupancy. You can move in as soon as your Pag-IBIG or bank loan is released, or immediately upon full payment.' },
+  { q: 'Are pets allowed?', a: 'Small pets are generally allowed subject to the homeowners association guidelines. Please inquire directly for specific pet policies.' },
+  { q: 'How much are the association dues?', a: 'Association dues are charged at ₱80 per sqm per month. For example, a 24 sqm unit would have monthly dues of approximately ₱1,920.' },
+  { q: 'Is there a parking slot available?', a: 'Parking slots are available for purchase separately. They are not included in the unit price. Please contact us for current availability and pricing.' }
+];
+
+
+function renderAmenities() {
+  const grid = document.getElementById('amenities-grid');
+  const data = (window._amenities && window._amenities.length) ? window._amenities : amenities;
+  grid.innerHTML = data.map((a, i) => `
+    <div class="bubble-hover glass-blur-card rounded-2xl overflow-hidden shadow-sm">
+      <div class="h-56 sm:h-72 overflow-hidden">
+        ${a.img
+          ? `<img src="${a.img}" alt="${a.name}" class="w-full h-full object-cover" style="object-position: ${a.imgPosition || '50% 50%'}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="w-full h-full" style="display:none;background:linear-gradient(135deg,rgba(167,243,208,0.2),rgba(52,211,153,0.15));align-items:center;justify-content:center;color:#a7f3d0;font-size:12px;">${a.name}</div>`
+          : `<div class="w-full h-full" style="background: linear-gradient(135deg, rgba(167,243,208,0.2), rgba(52,211,153,0.15));"></div>`
+        }
+      </div>
+      <div class="p-3 sm:p-5">
+        <h3 class="font-display font-bold text-sm sm:text-base mb-1 sm:mb-2" style="color:#ffffff;">${a.name}</h3>
+        <p class="text-xs sm:text-sm leading-relaxed mb-2 sm:mb-3" style="color:#ffffff;">${a.desc}</p>
+        <ul class="space-y-1">${a.extras.map(e => `<li class="flex items-center gap-1.5 text-xs sm:text-sm" style="color:#ffffff;"><i data-lucide="check-circle" class="flex-shrink-0" style="width:13px;height:13px;color:#a7f3d0;"></i>${e}</li>`).join('')}</ul>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderTestimonials() {
+  const track = document.getElementById('testimonial-track');
+  const cards = [...testimonials, ...testimonials, ...testimonials].map(t => {
+    const stars = '★'.repeat(t.rating) + '☆'.repeat(5 - t.rating);
+    return `<div class="flex-shrink-0 w-80 mx-3"><div class="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 h-full"><div class="text-cream text-lg mb-2">${stars}</div><p class="text-white/80 text-sm leading-relaxed italic mb-4">"${t.text}"</p><div class="font-semibold text-cream text-sm">— ${t.name}</div></div></div>`;
+  }).join('');
+  track.innerHTML = cards;
+}
+
+
+const carouselGap = 24;
+let isAnimating = false;
+
+function getCarouselWidth() {
+  const container = document.getElementById('unit-carousel');
+  const containerWidth = container ? container.parentElement.offsetWidth : window.innerWidth;
+  const w = window.innerWidth;
+
+  if (w <= 480) {
+    // Phone sizing: scale card like wide does (45% of container) but uncapped so it fills phone screen nicely
+    return Math.floor(containerWidth * 0.88);
+  }
+  // Wide screen: increased width
+  return Math.min(containerWidth * 0.65, 520);
+}
+
+const infiniteUnits = [...units, ...units, ...units];
+let currentUnit = units.length; 
+
+function renderUnits() {
+  const carousel = document.getElementById('unit-carousel');
+  const containerWidth = carousel.parentElement.offsetWidth;
+  const carouselWidth = getCarouselWidth();
+
+  carousel.innerHTML = infiniteUnits.map((u, i) => {
+    const realIndex = i % units.length;
+    const isActive = i === currentUnit;
+
+    const outerClick = isActive ? '' : (i < currentUnit ? `onclick="prevUnit()"` : `onclick="nextUnit()"`);
+    const isMobileCard = window.innerWidth <= 480;
+    const cardImgHeight = isMobileCard ? `${Math.floor(window.innerWidth * 0.72)}px` : '30rem';
+    return `<div class="carousel-item ${isActive ? 'active' : 'blurred'} flex-shrink-0 transition-all duration-500 group" style="width:${carouselWidth}px; margin: 0 ${carouselGap / 2}px; cursor:${isActive ? 'default' : 'pointer'};" ${outerClick}>
+      <div class="glass-blur-card rounded-2xl overflow-hidden shadow-md">
+        <div style="height:${cardImgHeight};" class="unit-card-img relative overflow-hidden" style="background:rgba(255,255,255,0.05);">
+          <img src="${u.img}" alt="${u.name}" class="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105">
+        </div>
+        <div class="p-5" ${isActive ? `onclick="openUnitModal(${realIndex})" style="cursor:pointer;"` : ''}>
+          <h3 class="font-display font-bold text-lg" style="color:#ffffff;">${u.name}</h3>
+          ${isActive ? `<div class="text-sm mt-1" style="color:#ffffff;">${u.size}</div><div class="mt-4 inline-flex items-center gap-2 rounded-xl py-2 px-4 text-sm font-semibold" style="background:rgba(255,215,0,0.12);color:#FFD700;"><svg xmlns='http://www.w3.org/2000/svg' width='15' height='15' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/></svg> Click for more details</div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  
+  const itemSpacing = carouselWidth + carouselGap;
+  const translateX = (containerWidth / 2) - (carouselWidth / 2) - (currentUnit * itemSpacing) - (carouselGap / 2);
+  
+  carousel.style.transform = `translateX(${translateX}px)`;
+}
+
+const _unitCardIdx = {};
+function unitCardSlide(trackId, dotsId, dir, total) {
+  if (!_unitCardIdx[trackId]) _unitCardIdx[trackId] = 0;
+  _unitCardIdx[trackId] = ((_unitCardIdx[trackId] + dir) % total + total) % total;
+  const idx = _unitCardIdx[trackId];
+  const track = document.getElementById(trackId);
+  if (track) track.style.transform = `translateX(-${idx * 100}%)`;
+  const dotsEl = document.getElementById(dotsId);
+  if (dotsEl) {
+    dotsEl.querySelectorAll('div').forEach((d, i) => {
+      d.style.background = i === idx ? '#FDE68A' : 'rgba(255,255,255,0.5)';
+    });
+  }
+}
+
+function nextUnit() {
+  if (isAnimating) return;
+  isAnimating = true;
+  
+  const carousel = document.getElementById('unit-carousel');
+  carousel.style.transition = 'transform 0.5s cubic-bezier(0.25,0.8,0.25,1)';
+  
+  currentUnit++;
+  renderUnits();
+  
+  
+  setTimeout(() => {
+    if (currentUnit >= units.length * 2) {
+      carousel.style.transition = 'none';
+      currentUnit = units.length;
+      renderUnits();
+    }
+    isAnimating = false;
+  }, 500);
+}
+
+function prevUnit() {
+  if (isAnimating) return;
+  isAnimating = true;
+  
+  const carousel = document.getElementById('unit-carousel');
+  carousel.style.transition = 'transform 0.5s cubic-bezier(0.25,0.8,0.25,1)';
+  
+  currentUnit--;
+  renderUnits();
+  
+  
+  setTimeout(() => {
+    if (currentUnit < units.length) {
+      carousel.style.transition = 'none';
+      currentUnit = units.length * 2 - 1;
+      renderUnits();
+    }
+    isAnimating = false;
+  }, 500);
+}
+
+function renderFAQ() {
+  const c = document.getElementById('faq-container');
+  c.innerHTML = faqs.map((f, i) => `
+    <div class="faq-blur-card rounded-xl overflow-hidden">
+      <button onclick="toggleFAQ(${i})" class="w-full flex items-center justify-between px-5 py-3 text-left font-medium text-sm transition-colors" style="color:#ffffff;background:transparent;">
+        <span>${f.q}</span><i data-lucide="chevron-down" class="faq-icon-${i} transition-transform duration-300" style="width:18px;height:18px;color:rgba(167,243,208,0.9);"></i>
+      </button>
+      <div class="faq-answer px-5 pb-4 text-sm leading-relaxed" id="faq-${i}" style="color:#ffffff;">${f.a}</div>
+    </div>
+  `).join('');
+  lucide.createIcons();
+}
+function toggleFAQ(i) {
+  const el = document.getElementById(`faq-${i}`);
+  const icon = document.querySelector(`.faq-icon-${i}`);
+  el.classList.toggle('open');
+  if (icon) icon.style.transform = el.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+
+function openModal(html) {
+  document.getElementById('modal-content').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  lucide.createIcons();
+}
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function getProjectMockupImages(projectName, projectObj) {
+  // If the project object itself carries an images array (e.g. from Firestore), use that
+  if (projectObj && Array.isArray(projectObj.images)) {
+    const imgs = projectObj.images.slice(0, 4);
+    while (imgs.length < 4) imgs.push('');
+    return imgs;
+  }
+  // Fallback: static per-project slots (any extension: .png, .jpg, etc.)
+  const mockups = {
+    'Finihomes Marulas':       ['marulas.png',       'marulas2.png', 'marulas3.png', 'marulas4.png'],
+    'Buildersville Residences':['buildersville.png',  'buildersville2.png', 'buildersville3.png', 'buildersville4.png'],
+    'Finihomes Marilao':       ['marilao.jpg',        'marilao2.png', 'marilao3.png', 'marilao4.png']
+  };
+  const imgs = mockups[projectName] || ['', '', '', ''];
+  while (imgs.length < 4) imgs.push('');
+  return imgs;
+}
+
+/* ── Project modal carousel state ── */
+let _projCarouselIdx = 0;
+let _projCarouselTotal = 0;
+
+function _projCarouselGo(idx) {
+  _projCarouselIdx = ((idx % _projCarouselTotal) + _projCarouselTotal) % _projCarouselTotal;
+  const track = document.getElementById('proj-modal-track');
+  if (track) track.style.transform = `translateX(-${_projCarouselIdx * 100}%)`;
+  document.querySelectorAll('.proj-modal-dot').forEach((d, i) => d.classList.toggle('active', i === _projCarouselIdx));
+}
+
+function openProjectModal(i) {
+  const p = projects[i];
+  const statusColor = p.status === 'Fully Occupied' ? 'bg-red-500' : p.status === 'Ready for Occupancy' ? 'bg-green-500' : 'bg-blue-500';
+
+  // Build slide list: up to 4 image slots from getProjectMockupImages, then map as last slide
+  const imgSrcs = getProjectMockupImages(p.name, p);
+  const totalImgSlots = 4;
+  const imageSlides = Array.from({ length: totalImgSlots }, (_, si) => {
+    const src = imgSrcs[si] || '';
+    const label = `Photo ${si + 1}`;
+    if (src) {
+      return `<div class="proj-modal-slide">
+        <img src="${src}" alt="${p.name} – photo ${si + 1}" loading="lazy">
+        <span class="slide-label">${label}</span>
+      </div>`;
+    } else {
+      return `<div class="proj-modal-slide">
+        <div class="slide-empty">
+          <span style="text-align:center;padding:0 20px;">📷 Photo ${si + 1}<br><span style="font-size:11px;opacity:0.6;">Image coming soon</span></span>
+        </div>
+      </div>`;
+    }
+  });
+
+  _projCarouselTotal = imageSlides.length;
+  _projCarouselIdx = 0;
+
+  const dotsHtml = imageSlides.map((_, di) =>
+    `<button class="proj-modal-dot${di === 0 ? ' active' : ''}" onclick="_projCarouselGo(${di})"></button>`
+  ).join('');
+
+  openModal(`
+    <div class="p-6 pb-4">
+      <div class="flex items-center gap-3 mb-3"><h3 class="font-display font-bold text-leaf text-xl">${p.name}</h3><span class="px-2 py-0.5 rounded-full text-white text-xs font-medium ${statusColor}">${p.status}</span></div>
+      <div class="flex items-center gap-1 text-gray-500 text-sm mb-4"><i data-lucide="map-pin" style="width:14px;height:14px;"></i>${p.location}</div>
+      <p class="text-gray-600 text-sm leading-relaxed mb-4">${p.desc}</p>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-green-50 rounded-xl p-3 text-center"><div class="text-leaf font-bold text-lg">${p.buildings}</div><div class="text-gray-500 text-xs">Buildings</div></div>
+        <div class="bg-green-50 rounded-xl p-3 text-center"><div class="text-leaf font-bold text-lg">${p.units}</div><div class="text-gray-500 text-xs">Total Units</div></div>
+      </div>
+      <h4 class="font-semibold text-gray-800 text-sm mb-2">What's Nearby</h4>
+      <ul class="space-y-1 mb-5">${p.nearby.map(n => `<li class="flex items-center gap-2 text-sm text-gray-600"><i data-lucide="check" class="text-leafLight" style="width:14px;height:14px;"></i>${n}</li>`).join('')}</ul>
+      <h4 class="font-semibold text-gray-800 text-sm mb-2">📍 Location Map</h4>
+    </div>
+    <div style="height:480px;overflow:hidden;">
+      <iframe src="https://maps.google.com/maps?q=${p.mapQuery}&output=embed" loading="lazy" title="Map of ${p.name}" style="width:100%;height:100%;border:0;display:block;"></iframe>
+    </div>
+    <div style="padding:16px 16px 16px;">
+      <h4 class="font-semibold text-gray-800 text-sm mb-2">Photos</h4>
+      <div class="proj-modal-carousel" style="border-radius:12px;margin-bottom:0;">
+        <div class="proj-modal-track" id="proj-modal-track">
+          ${imageSlides.join('')}
+        </div>
+        <button class="proj-modal-btn prev-btn" onclick="_projCarouselGo(_projCarouselIdx - 1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="proj-modal-btn next-btn" onclick="_projCarouselGo(_projCarouselIdx + 1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="proj-modal-dots">${dotsHtml}</div>
+      </div>
+    </div>
+  `);
+}
+
+function openAmenityModal(i) {
+  const a = amenities[i];
+  openModal(`
+    <div class="h-56 rounded-t-2xl overflow-hidden">
+      ${a.img
+        ? `<img src="${a.img}" alt="${a.name}" class="w-full h-full object-cover">`
+        : `<div class="w-full h-full" style="background: linear-gradient(135deg, #d1fae5, #a7f3d0);"></div>`
+      }
+    </div>
+    <div class="p-6">
+      <h3 class="font-display font-bold text-leaf text-xl mb-2">${a.name}</h3>
+      <p class="text-gray-600 text-sm leading-relaxed mb-4">${a.desc}</p>
+      <h4 class="font-semibold text-gray-800 text-sm mb-2">Features</h4>
+      <ul class="space-y-1">${a.extras.map(e => `<li class="flex items-center gap-2 text-sm text-gray-600"><i data-lucide="check-circle" class="text-leafLight" style="width:14px;height:14px;"></i>${e}</li>`).join('')}</ul>
+
+      <p class="text-xs text-gray-400 mt-3 italic">
+       *Amenities may vary per project and are subject to change without prior notice.
+      </p>
+      </div>
+  `);
+}
+
+function getUnitMockupImages(unitName, unitObj) {
+  // If the unit object itself carries an images array (e.g. from Firestore), use that
+  if (unitObj && Array.isArray(unitObj.images)) {
+    const imgs = unitObj.images.slice(0, 4);
+    while (imgs.length < 4) imgs.push('');
+    return imgs;
+  }
+  // Fallback: static per-unit slots (fill with filenames of any extension: .png, .jpg, etc.)
+  const mockups = {
+    'Studio':    ['studio1.png', 'studio2.png', 'studio3.png', 'studio4.png'],
+    '1 Bedroom': ['1br1.png', '1br2.png', '1br3.png', '1br4.png'],
+    '2 Bedroom': ['2br1.png', '2br2.png', '2br3.png', '2br4.png'],
+    '3 Bedroom': ['3br1.png', '3br2.png', '3br3.png', '3br4.png']
+  };
+  return mockups[unitName] || ['', '', '', ''];
+}
+
+function openUnitModal(i) {
+  const u = units[i];
+  const mockups = getUnitMockupImages(u.name, u);
+  
+  
+  // Build 4-slot image list: u.img first, then mockups
+  const allUnitImgs = [u.img, ...mockups].slice(0, 4);
+  while (allUnitImgs.length < 4) allUnitImgs.push('');
+
+  const layoutSlides = allUnitImgs.map((src, si) => {
+    if (src && src.trim()) {
+      return `<div class="proj-modal-slide">
+        <img src="${src}" alt="${u.name} photo ${si+1}" loading="lazy">
+        <span class="slide-label">Photo ${si + 1}</span>
+      </div>`;
+    } else {
+      return `<div class="proj-modal-slide">
+        <div class="slide-empty">
+          <span style="text-align:center;padding:0 20px;">📷 Photo ${si+1}<br><span style="font-size:11px;opacity:0.6;">Image coming soon</span></span>
+        </div>
+      </div>`;
+    }
+  }).join('');
+
+  const layoutDots = allUnitImgs.map((_, di) =>
+    `<button onclick="unitMockupGo(${di})" class="proj-modal-dot${di===0?' active':''}"></button>`
+  ).join('');
+
+  openModal(`
+    <div class="p-6">
+      <h3 class="font-display font-bold text-leaf text-xl mb-4">${u.name}</h3>
+      
+      <div class="grid grid-cols-3 gap-3 mb-5">
+        <div class="bg-green-50 rounded-xl p-3 text-center"><div class="text-leaf font-bold text-sm">${u.size}</div><div class="text-gray-500 text-xs">Floor Area</div></div>
+        <div class="bg-green-50 rounded-xl p-3 text-center"><div class="text-leaf font-bold text-sm">${u.beds}</div><div class="text-gray-500 text-xs">Bedroom</div></div>
+        <div class="bg-green-50 rounded-xl p-3 text-center"><div class="text-leaf font-bold text-sm">${u.bath}</div><div class="text-gray-500 text-xs">Bathroom</div></div>
+      </div>
+
+      <div class="flex gap-4 mb-5">
+        <div class="flex-1 bg-green-50 border border-green-100 rounded-2xl p-4 shadow-sm">
+          <h4 class="font-semibold text-leaf text-xs uppercase tracking-wide mb-3">Unit Features</h4>
+          <ul class="space-y-1">${u.features.map(f => `<li class="flex items-center gap-2 text-sm text-gray-600"><i data-lucide="check" class="text-leafLight" style="width:14px;height:14px;"></i>${f}</li>`).join('')}</ul>
+        </div>
+        <div class="flex flex-col gap-3 w-1/2 flex-shrink-0">
+          <div class="bg-green-50 border border-green-100 rounded-2xl p-4 text-center shadow-sm flex-1">
+            <div class="text-leafLight text-xs font-semibold uppercase tracking-wide mb-1">Price Range</div>
+            <div class="text-leaf font-bold text-sm leading-snug">${u.price}</div>
+          </div>
+          <div class="bg-green-50 border border-green-100 rounded-2xl p-4 text-center shadow-sm flex-1">
+            <div class="text-leafLight text-xs font-semibold uppercase tracking-wide mb-1">Monthly Amortization</div>
+            <div class="text-leaf font-bold text-sm leading-snug">${u.amort}</div>
+          </div>
+        </div>
+      </div>
+      
+      <h4 class="font-semibold text-gray-800 text-sm mb-3">Design & Layout</h4>
+      <div class="proj-modal-carousel" style="border-radius:12px;margin-bottom:16px;background:#f9fafb;">
+        <div class="proj-modal-track" id="unit-mockup-track">
+          ${layoutSlides.replace(/object-fit:cover/g, 'object-fit:contain').replace(/class="proj-modal-slide"/g, 'class="proj-modal-slide unit-layout-slide"')}
+        </div>
+        <button class="proj-modal-btn prev-btn" onclick="unitMockupGo(window._unitMockupIdx-1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="proj-modal-btn next-btn" onclick="unitMockupGo(window._unitMockupIdx+1)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <div class="proj-modal-dots" id="unit-mockup-dots">${layoutDots}</div>
+      </div>
+
+      <p class="text-gray-500 text-sm mb-5"><strong>Ideal for:</strong> ${u.ideal}</p>
+      
+      <a href="#contact" onclick="closeModal({target:document.getElementById('modal-overlay')})" class="block w-full text-center bg-leaf text-white font-semibold py-3 rounded-xl hover:bg-leafDark transition-all">Inquire Now</a>
+    </div>
+  `);
+  // Set up Design & Layout carousel
+  window._unitMockupIdx = 0;
+  window._unitMockupTotal = 4;
+  window.unitMockupGo = function(idx) {
+    const total = window._unitMockupTotal;
+    window._unitMockupIdx = ((idx % total) + total) % total;
+    const track = document.getElementById('unit-mockup-track');
+    if (track) track.style.transform = 'translateX(-' + (window._unitMockupIdx * 100) + '%)';
+    document.querySelectorAll('#unit-mockup-dots button').forEach((d, i) => {
+      d.classList.toggle('active', i === window._unitMockupIdx);
+    });
+  };
+}
+
+
+function handleContactSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+
+  const form = e.target;
+  const data = new FormData(form);
+
+  // ── Make.com webhook (replace with your actual URL) ───────────
+  const MAKE_WEBHOOK_URL = 'https://hook.eu1.make.com/sobobpnlqyu2zy24964j8nbfxuc0qy3j';
+  const payload = {
+    name:    document.getElementById('cf-name').value,
+    email:   document.getElementById('cf-email').value,
+    phone:   document.getElementById('cf-phone').value,
+    unit:    document.getElementById('cf-unit').value,
+    message: document.getElementById('cf-msg').value
+  };
+  fetch(MAKE_WEBHOOK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(err => console.warn('Make.com webhook error:', err));
+  // ─────────────────────────────────────────────────────────────
+
+  fetch('/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams(data).toString()
+  })
+    .then(() => {
+      showToast('Inquiry sent! We will contact you soon.');
+      form.reset();
+      btn.textContent = 'Send Inquiry';
+      btn.disabled = false;
+    })
+    .catch((error) => {
+      console.error('Form submission error:', error);
+      showToast('Something went wrong. Please try again.');
+      btn.textContent = 'Send Inquiry';
+      btn.disabled = false;
+    });
+}
+
+// Attach the submit handler to the contact form
+document.getElementById('contact-form').addEventListener('submit', handleContactSubmit);
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+
+const appEl = document.getElementById('app');
+appEl.addEventListener('scroll', () => {
+  const nav = document.getElementById('navbar');
+  // Keep nav transparent always - no background change on scroll
+  nav.classList.remove('nav-scrolled');
+  nav.style.backgroundColor = 'transparent';
+
+  // Amenities parallax slide effect
+  const amenitiesSection = document.getElementById('amenities');
+  const bgImg = document.getElementById('amenities-bg-img');
+  if (amenitiesSection && bgImg) {
+    const rect = amenitiesSection.getBoundingClientRect();
+    const sectionHeight = amenitiesSection.offsetHeight;
+    const viewportH = window.innerHeight;
+    // progress: 0 when section top enters viewport, 1 when section bottom leaves
+    const progress = Math.max(0, Math.min(1, (viewportH - rect.top) / (sectionHeight + viewportH)));
+    // Slide image from 0% to 50% as user scrolls through section
+    const xPos = progress * 50;
+    bgImg.style.backgroundPosition = `${xPos}% center`;
+  }
+});
+
+
+function closeMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  menu.style.opacity = '0';
+  menu.style.pointerEvents = 'none';
+  document.getElementById('mobile-menu-overlay').style.display = 'none';
+}
+function openMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  menu.style.opacity = '1';
+  menu.style.pointerEvents = 'all';
+  document.getElementById('mobile-menu-overlay').style.display = 'block';
+}
+function isMobileMenuOpen() {
+  return document.getElementById('mobile-menu').style.opacity === '1';
+}
+document.getElementById('hamburger-btn').addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (isMobileMenuOpen()) { closeMobileMenu(); } else { openMobileMenu(); }
+});
+document.getElementById('mobile-menu-overlay').addEventListener('click', closeMobileMenu);
+document.querySelectorAll('.mob-link').forEach(l => l.addEventListener('click', closeMobileMenu));
+
+
+document.querySelectorAll('a[href^="#"]').forEach(link => {
+  link.addEventListener('click', function(e) {
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      e.preventDefault();
+      const navHeight = document.getElementById('navbar').offsetHeight;
+      appEl.scrollTo({ top: target.offsetTop - navHeight, behavior: 'smooth' });
+    }
+  });
+});
+
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-section').forEach(s => observer.observe(s));
+
+
+let touchStartX = 0;
+document.getElementById('unit-carousel')?.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+document.getElementById('unit-carousel')?.addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) { diff > 0 ? nextUnit() : prevUnit(); }
+}, { passive: true });
+
+
+renderAmenities();
+renderTestimonials();
+renderUnits();
+renderFAQ();
+lucide.createIcons();
+
+// Inject gold floating particles into all sections (excluding hero-wrapper which already has them)
+(function() {
+  const sectionIds = ['roadmap','amenities','partners','testimonials','units','contact','faq'];
+  const configs = [
+    {w:5,h:5,l:'8%',t:'12%',dur:'7s',del:'0s',op:0.5},
+    {w:7,h:7,l:'78%',t:'8%',dur:'6s',del:'1s',op:0.6},
+    {w:4,h:4,l:'22%',t:'55%',dur:'9s',del:'2s',op:0.45},
+    {w:6,h:6,l:'55%',t:'20%',dur:'8s',del:'0.5s',op:0.55},
+    {w:5,h:5,l:'90%',t:'65%',dur:'7.5s',del:'1.8s',op:0.5},
+    {w:8,h:8,l:'40%',t:'80%',dur:'6.5s',del:'3s',op:0.4},
+    {w:4,h:4,l:'65%',t:'45%',dur:'10s',del:'0.8s',op:0.5},
+  ];
+  sectionIds.forEach(id => {
+    const sec = document.getElementById(id);
+    if (!sec) return;
+    if (getComputedStyle(sec).position === 'static') sec.style.position = 'relative';
+    configs.forEach(c => {
+      const d = document.createElement('div');
+      d.className = 'gold-particle';
+      d.style.cssText = `width:${c.w}px;height:${c.h}px;left:${c.l};top:${c.t};animation-duration:${c.dur};animation-delay:${c.del};opacity:${c.op};z-index:0;position:absolute;pointer-events:none;`;
+      sec.appendChild(d);
+    });
+  });
+})();
+
+
+window._reRenderUnits = (units) => { window._units = units; renderUnits(); lucide.createIcons(); };
+window._reRenderAmenities = (firestoreAmenities) => {
+  // Merge Firestore data with local amenities — match by name so order differences don't cause wrong image fallbacks
+  const merged = firestoreAmenities.map((fa) => {
+    const local = amenities.find(a => a.name === fa.name) || {};
+    return { ...fa, img: fa.img || local.img, imgPosition: fa.imgPosition || local.imgPosition };
+  });
+  window._amenities = merged;
+  renderAmenities();
+  lucide.createIcons();
+};
+window._reRenderTestimonials = (testimonials) => { window._testimonials = testimonials; renderTestimonials(); };
+window._reRenderFaq = (faq) => { window._faq = faq; renderFAQ(); };
+window._reRenderProjects = (projects) => { window._projects = projects; if(typeof renderRoadmap==='function') renderRoadmap(); };
+
+
+window.addEventListener('resize', () => {
+  renderUnits();
+  positionRoadmapLine();
+});
+
+
+function positionRoadmapLine() {
+  const line = document.getElementById('roadmap-line');
+  const dot0 = document.getElementById('rdot-0');
+  const dot2 = document.getElementById('rdot-2');
+  const roadmap = document.getElementById('desktop-roadmap');
+  if (!line || !dot0 || !dot2 || !roadmap) return;
+  const r = roadmap.getBoundingClientRect();
+  const d0 = dot0.getBoundingClientRect();
+  const d2 = dot2.getBoundingClientRect();
+  const left = d0.left + d0.width / 2 - r.left;
+  const right = r.right - (d2.left + d2.width / 2);
+  line.style.left = left + 'px';
+  line.style.right = right + 'px';
+}
+requestAnimationFrame(() => requestAnimationFrame(positionRoadmapLine));
+
+
+
+
+// Video: autoplay muted, unmute when video itself is 20% visible, mute when it leaves
+(function() {
+  const video = document.getElementById('why-video');
+  if (!video) return;
+
+  video.muted = true;
+  video.play().catch(() => {});
+
+  let userInteracted = false;
+  const unlock = () => { userInteracted = true; };
+  ['scroll', 'touchstart', 'click', 'keydown'].forEach(e =>
+    window.addEventListener(e, unlock, { once: true, passive: true })
+  );
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        video.play().catch(() => {});
+        if (userInteracted) video.muted = false;
+      } else {
+        video.muted = true;
+      }
+    });
+  }, { threshold: 0.2 });
+
+  observer.observe(video);
+})();
+
+
+
+
+const defaultConfig = {
+  background_color: '#2D6A4F',
+  surface_color: '#FFFFFF',
+  text_color: '#1B4332',
+  primary_action_color: '#FDE68A',
+  secondary_action_color: '#40916C',
+  font_family: 'Playfair Display',
+  font_size: 16,
+  hero_theme: 'Stop Renting, Start Investing, Start Earning',
+  hero_subtheme: 'Affordable, safe, and convenient Condominiums designed for modern Filipino families. Your dream home starts here.',
+  contact_email: 'joven.rebuyas910@gmail.com',
+  contact_phone: '+63-945-744-6025 | +63-977-773-0872',
+  contact_whatsapp: '+63-977-773-0872'
+};
+
+async function onConfigChange(config) {
+  const bg = config.background_color || defaultConfig.background_color;
+  const surface = config.surface_color || defaultConfig.surface_color;
+  const text = config.text_color || defaultConfig.text_color;
+  const primary = config.primary_action_color || defaultConfig.primary_action_color;
+  const secondary = config.secondary_action_color || defaultConfig.secondary_action_color;
+  const font = config.font_family || defaultConfig.font_family;
+  const baseSize = config.font_size || defaultConfig.font_size;
+
+  
+  document.querySelectorAll('#amenities, #testimonials, #contact').forEach(s => s.style.backgroundColor = 'transparent');
+  
+  document.documentElement.style.setProperty('--nav-bg', bg);
+
+  
+  const heroTheme = document.getElementById('hero-theme');
+  const heroSub = document.getElementById('hero-subtheme');
+  if (heroTheme) heroTheme.textContent = config.hero_theme || defaultConfig.hero_theme;
+  if (heroSub) heroSub.textContent = config.hero_subtheme || defaultConfig.hero_subtheme;
+
+  
+  const de = document.getElementById('display-email');
+  const dp = document.getElementById('display-phone');
+  const fe = document.getElementById('footer-email');
+  const fp = document.getElementById('footer-phone');
+  if (de) de.textContent = config.contact_email || defaultConfig.contact_email;
+  if (dp) dp.textContent = config.contact_phone || defaultConfig.contact_phone;
+  if (fe) fe.textContent = config.contact_email || defaultConfig.contact_email;
+  if (fp) fp.textContent = config.contact_phone || defaultConfig.contact_phone;
+
+  
+  const stack = `${font}, DM Sans, sans-serif`;
+  document.querySelectorAll('.font-display').forEach(el => el.style.fontFamily = stack);
+
+  
+  document.querySelectorAll('h1').forEach(el => el.style.fontSize = `${baseSize * 2.5}px`);
+  document.querySelectorAll('h2').forEach(el => el.style.fontSize = `${baseSize * 2}px`);
+  document.querySelectorAll('p, li, span, a, div').forEach(el => {
+    
+  });
+}
+
+function mapToCapabilities(config) {
+  return {
+    recolorables: [
+      { get: () => config.background_color || defaultConfig.background_color, set: v => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+      { get: () => config.surface_color || defaultConfig.surface_color, set: v => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+      { get: () => config.text_color || defaultConfig.text_color, set: v => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+      { get: () => config.primary_action_color || defaultConfig.primary_action_color, set: v => { config.primary_action_color = v; window.elementSdk.setConfig({ primary_action_color: v }); } },
+      { get: () => config.secondary_action_color || defaultConfig.secondary_action_color, set: v => { config.secondary_action_color = v; window.elementSdk.setConfig({ secondary_action_color: v }); } }
+    ],
+    borderables: [],
+    fontEditable: { get: () => config.font_family || defaultConfig.font_family, set: v => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); } },
+    fontSizeable: { get: () => config.font_size || defaultConfig.font_size, set: v => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); } }
+  };
+}
+
+function mapToEditPanelValues(config) {
+  return new Map([
+    ['hero_theme', config.hero_theme || defaultConfig.hero_theme],
+    ['hero_subtheme', config.hero_subtheme || defaultConfig.hero_subtheme],
+    ['contact_email', config.contact_email || defaultConfig.contact_email],
+    ['contact_phone', config.contact_phone || defaultConfig.contact_phone]
+  ]);
+}
+
+window.elementSdk.init({ defaultConfig, onConfigChange, mapToCapabilities, mapToEditPanelValues });
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9ed9e8e790e0fee0',t:'MTc3NjQxMjk3MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><script>
+(function() {
+  function initHero() {
+    var siteBg = document.getElementById('site-bg');
+    if (!siteBg) return;
+    var isNarrow = window.innerWidth <= 767;
+    var jpgSrc = isNarrow ? 'homepagenarrow.jpg' : 'homepagewide.jpg';
+    var pngSrc = isNarrow ? 'homepagenarrow.png' : 'homepagewide.png';
+    var jpg = new Image();
+    jpg.onload = function() { siteBg.style.backgroundImage = "url('" + jpgSrc + "')"; };
+    jpg.onerror = function() {
+      var png = new Image();
+      png.onload = function() { siteBg.style.backgroundImage = "url('" + pngSrc + "')"; };
+      png.src = pngSrc;
+    };
+    jpg.src = jpgSrc;
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHero);
+  } else {
+    initHero();
+  }
+})();
+</script>
+</body>
+</html>

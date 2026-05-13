@@ -1,0 +1,2671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finihomes Admin Panel</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2D6A4F">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Finihomes Admin">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getAuth, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCTaqaJ5tgO5p982kgltbAIkXsKodSSGW8",
+      authDomain: "finihomes-admin.firebaseapp.com",
+      projectId: "finihomes-admin",
+      storageBucket: "finihomes-admin.firebasestorage.app",
+      messagingSenderId: "554166532113",
+      appId: "1:554166532113:web:ece577f626f854e21a59b0"
+    };
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const googleProvider = new GoogleAuthProvider();
+
+    // Expose to global scope
+    window._fb = { db, auth, doc, setDoc, getDoc, onSnapshot, signOut, onAuthStateChanged,
+      signInWithGoogle: () => signInWithPopup(auth, googleProvider)
+    };
+
+    // Auth state listener
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-shell').style.display = 'flex';
+        document.getElementById('auth-user-email').textContent = user.displayName || user.email;
+        const avatar = document.getElementById('auth-avatar');
+        const dot = document.getElementById('auth-dot');
+        if (avatar && user.photoURL) {
+          avatar.src = user.photoURL;
+          avatar.style.display = 'block';
+          if (dot) dot.style.display = 'none';
+        }
+        window._loadFromFirebase();
+      } else {
+        document.getElementById('login-screen').style.display = 'flex';
+        document.getElementById('app-shell').style.display = 'none';
+      }
+    });
+  </script>
+  <style>
+    :root {
+      --leaf: #2D6A4F;
+      --leaf-dark: #1B4332;
+      --leaf-light: #40916C;
+      --cream: #FDE68A;
+      --cream-dark: #D97706;
+      --bg: #0D1117;
+      --surface: #161B22;
+      --surface2: #1C2330;
+      --surface3: #21262D;
+      --border: #30363D;
+      --border2: #3D444E;
+      --text: #E6EDF3;
+      --text-muted: #8B949E;
+      --text-faint: #484F58;
+      --accent: #58A6FF;
+      --success: #3FB950;
+      --warning: #D29922;
+      --danger: #F85149;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* ── Login Screen ── */
+    #login-screen {
+      position: fixed; inset: 0; z-index: 9999;
+      background: #0D1117;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .login-box {
+      background: #161B22;
+      border: 1px solid #30363D;
+      border-radius: 16px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 380px;
+    }
+    .login-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      color: #E6EDF3;
+      margin-bottom: 6px;
+    }
+    .login-sub {
+      font-size: 12px;
+      color: #8B949E;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 28px;
+    }
+    .login-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+    .login-field label { font-size: 11px; color: #8B949E; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.3px; }
+    .login-field input {
+      background: #0D1117; border: 1px solid #30363D; border-radius: 7px;
+      padding: 10px 13px; color: #E6EDF3; font-size: 14px; outline: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .login-field input:focus { border-color: #58A6FF; box-shadow: 0 0 0 3px rgba(88,166,255,0.12); }
+    .login-btn {
+      width: 100%; background: #2D6A4F; color: white; border: none;
+      padding: 11px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer; margin-top: 6px; font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s;
+    }
+    .login-btn:hover { background: #40916C; }
+    .google-btn {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      width: 100%; background: #fff; color: #3c4043; border: 1px solid #dadce0;
+      padding: 12px 16px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: background 0.15s, box-shadow 0.15s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .google-btn:hover { background: #f8f9fa; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .login-error { font-size: 12px; color: #F85149; margin-top: 10px; min-height: 18px; }
+    /* Auth user badge */
+    .auth-badge {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: #8B949E; font-family: 'DM Mono', monospace;
+    }
+    .auth-signout {
+      background: none; border: 1px solid #30363D; color: #8B949E;
+      border-radius: 5px; padding: 3px 8px; font-size: 11px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; transition: all 0.15s;
+    }
+    .auth-signout:hover { background: rgba(248,81,73,0.1); color: #F85149; border-color: rgba(248,81,73,0.3); }
+    /* Firebase save indicator */
+    .firebase-badge {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; color: #3FB950; font-family: 'DM Mono', monospace;
+    }
+    .firebase-badge svg { width: 12px; height: 12px; }
+    
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-logo {
+      padding: 20px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-logo .brand {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .sidebar-logo .sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .nav-section {
+      padding: 12px 12px 4px;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-faint);
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      margin: 1px 8px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--surface3); color: var(--text); }
+    .nav-item.active { background: rgba(88,166,255,0.12); color: var(--accent); }
+    .nav-item .icon { width: 16px; height: 16px; flex-shrink: 0; }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 10px;
+      padding: 1px 6px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-muted);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .export-btn {
+      width: 100%;
+      background: var(--leaf);
+      color: white;
+      border: none;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: background 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .export-btn:hover { background: var(--leaf-light); }
+    .export-btn.secondary {
+      background: var(--surface3);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      margin-top: 6px;
+    }
+    .export-btn.secondary:hover { background: var(--surface2); color: var(--text); }
+
+    /* ── Main ── */
+    .main {
+      margin-left: 240px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .topbar-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
+    .save-all-btn {
+      background: var(--leaf);
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .save-all-btn:hover { background: var(--leaf-light); }
+    .save-all-btn:active { transform: scale(0.97); }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--success);
+      box-shadow: 0 0 6px var(--success);
+    }
+    .status-text { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+    .content { padding: 28px; flex: 1; }
+
+    /* ── Panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Section headers ── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .section-head h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .section-head p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* ── Cards / Forms ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+    }
+    .card-title .dot.green { background: var(--success); }
+    .card-title .dot.yellow { background: var(--warning); }
+    .card-title .dot.blue { background: var(--accent); }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+    .form-grid.cols1 { grid-template-columns: 1fr; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      font-family: 'DM Mono', monospace;
+    }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="number"], textarea, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 9px 12px;
+      color: var(--text);
+      font-size: 13.5px;
+      font-family: 'DM Sans', sans-serif;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+      outline: none;
+      resize: vertical;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(88,166,255,0.12);
+    }
+    textarea { min-height: 80px; }
+    select { cursor: pointer; }
+    select option { background: var(--surface2); }
+
+    /* ── List editor (units, amenities, projects, faq, testimonials) ── */
+    .list-items { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .list-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      overflow: hidden;
+    }
+    .list-item-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+      gap: 10px;
+      transition: background 0.1s;
+    }
+    .list-item-header:hover { background: var(--surface3); }
+    .list-item-header .item-num {
+      width: 22px; height: 22px;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-family: 'DM Mono', monospace;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+    .list-item-header .item-title {
+      flex: 1;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .list-item-header .item-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-family: 'DM Mono', monospace;
+    }
+    .badge-green { background: rgba(63,185,80,0.15); color: var(--success); border: 1px solid rgba(63,185,80,0.3); }
+    .badge-red { background: rgba(248,81,73,0.15); color: var(--danger); border: 1px solid rgba(248,81,73,0.3); }
+    .badge-yellow { background: rgba(210,153,34,0.15); color: var(--warning); border: 1px solid rgba(210,153,34,0.3); }
+    .badge-blue { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+
+    .chevron {
+      width: 16px; height: 16px;
+      transition: transform 0.2s;
+      color: var(--text-faint);
+      flex-shrink: 0;
+    }
+    .chevron.open { transform: rotate(90deg); }
+
+    .list-item-body {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .list-item-body.open { display: block; }
+    .list-item-body .form-grid { margin-top: 14px; }
+
+    .del-btn {
+      background: rgba(248,81,73,0.1);
+      color: var(--danger);
+      border: 1px solid rgba(248,81,73,0.25);
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .del-btn:hover { background: rgba(248,81,73,0.2); }
+
+    .add-btn {
+      background: rgba(88,166,255,0.08);
+      color: var(--accent);
+      border: 1px dashed rgba(88,166,255,0.3);
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      transition: all 0.15s;
+      width: 100%;
+      text-align: center;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .add-btn:hover { background: rgba(88,166,255,0.14); border-color: rgba(88,166,255,0.5); }
+
+    /* Array fields (features, extras, nearby) */
+    .array-field { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .array-row { display: flex; gap: 6px; }
+    .array-row input { flex: 1; }
+    .array-del {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .array-del:hover { background: rgba(248,81,73,0.12); color: var(--danger); border-color: rgba(248,81,73,0.3); }
+    .array-add {
+      font-size: 12px; color: var(--accent);
+      background: none; border: none;
+      cursor: pointer; text-align: left;
+      font-family: 'DM Sans', sans-serif;
+      padding: 2px 0;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .array-add:hover { opacity: 0.8; }
+
+    /* Color picker */
+    .color-row {
+      display: flex; align-items: center; gap: 10px;
+    }
+    .color-swatch {
+      width: 36px; height: 36px;
+      border-radius: 7px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .color-swatch input[type="color"] {
+      width: 100%; height: 100%;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      background: none;
+    }
+    .color-hex {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 10px;
+      color: var(--text);
+      width: 110px;
+    }
+
+    /* Stars */
+    .star-input { display: flex; gap: 4px; }
+    .star-input span {
+      font-size: 22px;
+      cursor: pointer;
+      transition: opacity 0.1s;
+      user-select: none;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--leaf);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 500;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 9999;
+      display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    #toast.show { transform: translateY(0); opacity: 1; }
+
+    /* Help text */
+    .help { font-size: 11.5px; color: var(--text-faint); margin-top: 4px; font-style: italic; }
+
+    /* Divider */
+    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+    /* Tabs within a panel */
+    .tab-row {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: var(--surface2);
+      padding: 4px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      width: fit-content;
+    }
+    .tab {
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+
+    /* ── Media / Upload zones ── */
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .media-tile {
+      background: var(--surface3);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 1 / 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .media-tile:hover { border-color: var(--accent); background: var(--surface2); }
+    .media-tile.has-media { background: #000; aspect-ratio: unset; }
+    .media-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .media-tile video { width: 100%; display: block; max-height: 200px; object-fit: cover; }
+    .media-tile .tile-label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(transparent, rgba(0,0,0,0.75));
+      color: #fff; font-size: 11px; padding: 18px 8px 7px;
+      font-family: 'DM Mono', monospace; letter-spacing: 0.3px;
+    }
+    .media-tile .tile-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; transition: opacity 0.15s;
+      gap: 8px;
+    }
+    .media-tile:hover .tile-overlay { opacity: 1; }
+    .tile-action {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff; border-radius: 6px;
+      padding: 6px 10px; font-size: 12px; cursor: pointer;
+      font-family: 'DM Sans', sans-serif; font-weight: 500;
+      transition: background 0.1s;
+    }
+    .tile-action:hover { background: rgba(255,255,255,0.28); }
+    .tile-action.danger { background: rgba(248,81,73,0.2); border-color: rgba(248,81,73,0.4); color: var(--danger); }
+    .tile-action.danger:hover { background: rgba(248,81,73,0.35); }
+
+    .drop-zone {
+      border: 2px dashed var(--border2);
+      border-radius: 10px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(88,166,255,0.05);
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-zone .dz-icon { color: var(--text-faint); margin-bottom: 10px; }
+    .drop-zone .dz-title { font-size: 14px; font-weight: 600; color: var(--text-muted); }
+    .drop-zone .dz-sub { font-size: 12px; color: var(--text-faint); margin-top: 4px; }
+
+    .media-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--surface3); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 10px 3px 8px;
+      font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace;
+    }
+    .media-tag .dot { width: 7px; height: 7px; border-radius: 50%; }
+    .media-tag .dot.img { background: #58A6FF; }
+    .media-tag .dot.vid { background: #F85149; }
+
+    .section-split { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 700px) { .section-split { grid-template-columns: 1fr; } }
+
+    /* Hide all scrollbars but keep scrolling */
+    * { scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
+
+    /* ── Visual polish: nav active glow + sidebar gradient ── */
+    .sidebar {
+      background: linear-gradient(180deg, #161B22 0%, #141920 100%);
+    }
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(88,166,255,0.14) 0%, rgba(88,166,255,0.05) 100%);
+      color: var(--accent);
+      border-left: 2px solid var(--accent);
+      margin-left: 6px;
+      padding-left: 10px;
+    }
+    .nav-item { border-left: 2px solid transparent; transition: all 0.18s; }
+    .nav-item:hover { background: var(--surface3); color: var(--text); border-left-color: var(--border2); }
+
+    .topbar {
+      background: rgba(22, 27, 34, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .card {
+      background: linear-gradient(135deg, var(--surface) 0%, rgba(28,35,48,0.8) 100%);
+      border: 1px solid var(--border);
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--border2); }
+
+    .section-head h2 {
+      background: linear-gradient(90deg, var(--text) 60%, var(--text-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Panel fade-in animation ── */
+    .panel.active {
+      animation: panelIn 0.22s ease forwards;
+    }
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Login box polish ── */
+    .login-box {
+      box-shadow: 0 0 0 1px rgba(88,166,255,0.08), 0 24px 64px rgba(0,0,0,0.6);
+    }
+
+    /* ── Save btn pulse ── */
+    .save-all-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    .save-all-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.08);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .save-all-btn:hover::after { opacity: 1; }
+
+    /* ── Topbar breadcrumb pill ── */
+    .topbar-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .topbar-title::before {
+      content: '';
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--leaf-light);
+      box-shadow: 0 0 8px var(--leaf);
+      flex-shrink: 0;
+    }
+
+    /* ── Section label chips ── */
+    .section-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(45,106,79,0.12);
+      border: 1px solid rgba(45,106,79,0.25);
+      color: #40916C;
+      border-radius: 20px;
+      font-size: 10px;
+      font-family: 'DM Mono', monospace;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 2px 9px;
+      margin-bottom: 6px;
+      display: block;
+      width: fit-content;
+    }
+
+    /* ── Improved list items ── */
+    .list-item {
+      transition: border-color 0.15s;
+    }
+    .list-item:hover {
+      border-color: var(--border2);
+    }
+    .hamburger {
+      display: flex;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 38px; height: 38px;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .hamburger:hover { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+
+    /* ── Sidebar overlay (mobile) ── */
+    .sidebar-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 99;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .sidebar-overlay.visible { opacity: 1; }
+
+    /* ── Login box polish ── */
+    .login-box {
+      box-shadow: 0 0 0 1px rgba(88,166,255,0.08), 0 24px 64px rgba(0,0,0,0.6);
+    }
+
+    /* ── Save btn pulse ── */
+    .save-all-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    .save-all-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.08);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .save-all-btn:hover::after { opacity: 1; }
+
+    /* ── Topbar breadcrumb pill ── */
+    .topbar-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .topbar-title::before {
+      content: '';
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--leaf-light);
+      box-shadow: 0 0 8px var(--leaf);
+      flex-shrink: 0;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .form-grid.cols3 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 260px;
+      }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid.cols3 { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+      .topbar { padding: 12px 16px; }
+      .topbar-actions { gap: 6px; }
+      .firebase-badge { display: none; }
+      .status-text { display: none; }
+      .auth-badge span#auth-user-email { display: none; }
+    }
+    @media (max-width: 480px) {
+      .save-all-btn span { display: none; }
+    }
+
+    /* ── Sidebar always collapsed by default, toggle via hamburger ── */
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 200;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay { display: block; pointer-events: none; }
+    .sidebar-overlay.visible { pointer-events: auto; }
+    .main { margin-left: 0 !important; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ LOGIN SCREEN ══════════════════════ -->
+<div id="login-screen" style="display:flex;position:fixed;inset:0;z-index:9999;background:#0D1117;align-items:center;justify-content:center;">
+  <div class="login-box">
+    <div class="login-logo">🏠 Finihomes</div>
+    <div class="login-sub">Admin Panel · Secure Access</div>
+    <div style="margin:28px 0 10px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:16px;">🔐</div>
+      <p style="font-size:13px;color:#8B949E;margin-bottom:24px;line-height:1.6;">Sign in with your Google account to access the Finihomes admin panel.</p>
+      <button class="google-btn" onclick="doGoogleLogin()">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+        Sign in with Google
+      </button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ APP SHELL ══════════════════════ -->
+<div id="app-shell" style="display:none;width:100%;min-height:100vh;flex-direction:row;">
+
+<!-- Sidebar overlay for mobile -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ══════════════════════ SIDEBAR ══════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">🏠 Finihomes</div>
+    <div class="sub">Admin Panel</div>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(63,185,80,0.1);border:1px solid rgba(63,185,80,0.25);border-radius:20px;padding:3px 9px;font-size:10px;color:#3FB950;font-family:'DM Mono',monospace;letter-spacing:0.4px;white-space:nowrap;max-width:140px;overflow:hidden;">
+        <img id="auth-avatar" style="display:none;width:14px;height:14px;border-radius:50%;object-fit:cover;flex-shrink:0;" src="" alt="">
+        <span style="width:5px;height:5px;border-radius:50%;background:#3FB950;display:inline-block;flex-shrink:0;" id="auth-dot"></span>
+        <span id="auth-user-email" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Signed in</span>
+      </div>
+      <button onclick="doSignOut()" style="display:inline-flex;align-items:center;gap:5px;background:rgba(248,81,73,0.12);border:1px solid rgba(248,81,73,0.3);border-radius:20px;padding:3px 9px;font-size:10px;color:#F85149;font-family:'DM Mono',monospace;letter-spacing:0.5px;cursor:pointer;white-space:nowrap;transition:background 0.15s;" onmouseover="this.style.background='rgba(248,81,73,0.22)'" onmouseout="this.style.background='rgba(248,81,73,0.12)'">
+        <svg width="9" height="9" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Sign Out
+      </button>
+    </div>
+  </div>
+
+  <div class="nav-section">Site Content</div>
+  <div class="nav-item active" data-panel="general" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12h18M3 6h18M3 18h18"/></svg>
+    General
+  </div>
+  <div class="nav-item" data-panel="hero" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    Home Page
+  </div>
+  <div class="nav-item" data-panel="whyus" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    Why Us
+  </div>
+  <div class="nav-item" data-panel="payment" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+    Payment Options
+  </div>
+  <div class="nav-item" data-panel="contact" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+    Contact Info
+  </div>
+  <div class="nav-item" data-panel="colors" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+    Colors & Fonts
+  </div>
+
+  <div class="nav-section">Listings</div>
+  <div class="nav-item" data-panel="units" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    Units
+    <span class="nav-badge" id="nb-units">4</span>
+  </div>
+  <div class="nav-item" data-panel="projects" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+    Projects
+    <span class="nav-badge" id="nb-projects">3</span>
+  </div>
+  <div class="nav-item" data-panel="amenities" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+    Amenities
+    <span class="nav-badge" id="nb-amenities">10</span>
+  </div>
+
+  <div class="nav-item" data-panel="media" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg>
+    Media
+    <span class="nav-badge" id="nb-media">0</span>
+  </div>
+
+  <div class="nav-section">Content</div>
+  <div class="nav-item" data-panel="testimonials" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+    Testimonials
+    <span class="nav-badge" id="nb-testimonials">6</span>
+  </div>
+  <div class="nav-item" data-panel="faq" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    FAQ
+    <span class="nav-badge" id="nb-faq">8</span>
+  </div>
+  <div class="nav-item" data-panel="partners" onclick="switchPanel(this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+    Partners
+  </div>
+
+  <div class="sidebar-footer">
+    <button class="export-btn" onclick="exportJSON()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+      Export JSON
+    </button>
+    <button class="export-btn secondary" onclick="copyInstructions()">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+      Copy JS Patch
+    </button>
+  </div>
+</aside>
+
+<!-- ══════════════════════ MAIN ══════════════════════ -->
+<div class="main">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="hamburger" id="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+        <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" id="hamburger-icon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <div class="topbar-title" id="panel-title">General Settings</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="firebase-badge">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Firebase Live
+      </div>
+      <div class="status-dot"></div>
+      <span class="status-text" id="save-status">All saved</span>
+      <a href="index.html" target="_blank" class="save-all-btn" style="text-decoration:none;background:var(--surface3);border:1px solid var(--border2);color:var(--text-muted);" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--surface3)';this.style.color='var(--text-muted)'">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        <span>Preview Site</span>
+      </a>
+      <button class="save-all-btn" onclick="saveAll()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+        <span>Save to Firebase</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── GENERAL ── -->
+    <div class="panel active" id="panel-general">
+      <div class="section-head">
+        <div>
+          <h2>General Settings</h2>
+          <p>Brand name, taglines, and about section text</p>
+        </div>
+      </div>
+
+      <!-- Quick Stats Overview -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;min-width:0;">
+        <div style="background:linear-gradient(135deg,rgba(63,185,80,0.1),rgba(63,185,80,0.05));border:1px solid rgba(63,185,80,0.2);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:var(--success);" id="dash-units">4</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Unit Types</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(88,166,255,0.1),rgba(88,166,255,0.05));border:1px solid rgba(88,166,255,0.2);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:var(--accent);" id="dash-projects">3</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Projects</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(210,153,34,0.1),rgba(210,153,34,0.05));border:1px solid rgba(210,153,34,0.2);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:var(--warning);" id="dash-amenities">10</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Amenities</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(248,81,73,0.1),rgba(248,81,73,0.05));border:1px solid rgba(248,81,73,0.2);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:var(--danger);" id="dash-testimonials">6</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">Testimonials</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(45,106,79,0.15),rgba(45,106,79,0.05));border:1px solid rgba(45,106,79,0.25);border-radius:10px;padding:14px 16px;">
+          <div style="font-size:22px;font-weight:700;font-family:'Syne',sans-serif;color:#40916C;" id="dash-faq">6</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">FAQ Items</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Brand</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Brand Name</label>
+            <input type="text" id="g-brand" value="Finihomes - Marilao">
+          </div>
+          <div class="form-group">
+            <label>Nav Tagline</label>
+            <input type="text" id="g-navtag" value="Finihomes - Marilao">
+          </div>
+          <div class="form-group full">
+            <label>Footer Tagline</label>
+            <input type="text" id="g-footer-tag" value="Affordable condominiums for modern Filipino families. HLURB Licensed & Pag-Ibig Accredited.">
+          </div>
+          <div class="form-group full">
+            <label>Office Address</label>
+            <input type="text" id="g-office" value="Valenzuela City, Metro Manila">
+          </div>
+          <div class="form-group full">
+            <label>Logo Image URL / Filename</label>
+            <input type="text" id="g-logo" value="finihomes_pfp.png" placeholder="e.g. finihomes_pfp.png or https://...">
+            <span class="help">The round navbar logo. Use a filename (place beside index.html) or a full URL.</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot blue"></span>About Section</div>
+        <div class="form-grid cols1">
+          <div class="form-group">
+            <label>About Heading</label>
+            <input type="text" id="g-about-title" value="About Finihomes Residences">
+          </div>
+          <div class="form-group">
+            <label>Paragraph 1</label>
+            <textarea id="g-about-p1">Finihomes Residences is a trusted Philippine real estate developer committed to making homeownership accessible to every Filipino family. For over a decade, we have been building quality, affordable condominiums that blend modern design with practical living spaces — all situated in prime locations with easy access to schools, hospitals, transportation, and commercial centers.</textarea>
+          </div>
+          <div class="form-group">
+            <label>Paragraph 2</label>
+            <textarea id="g-about-p2">Our mission is rooted in the belief that every hardworking Filipino deserves a safe and comfortable home. Whether you are a first-time buyer, a young professional, or an OFW looking to invest back home, Finihomes offers flexible payment options — including Pag-Ibig financing, bank loans, and in-house terms — so you can move in sooner than you think.</textarea>
+          </div>
+          <div class="form-group">
+            <label>Paragraph 3</label>
+            <textarea id="g-about-p3">With world-class amenities, 24/7 security, and a community-centered approach to development, Finihomes isn't just building condominiums — we're building the future of Filipino families. Join the thousands who have already made the smart choice to stop renting and start investing with Finihomes.</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot yellow"></span>Stats</div>
+        <div class="form-grid cols3">
+          <div class="form-group">
+            <label>Years Experience</label>
+            <input type="text" id="g-stat1" value="12+">
+          </div>
+          <div class="form-group">
+            <label>Units Delivered</label>
+            <input type="text" id="g-stat2" value="5K+">
+          </div>
+          <div class="form-group">
+            <label>Projects</label>
+            <input type="text" id="g-stat3" value="3">
+          </div>
+          <div class="form-group">
+            <label>Satisfaction Rate</label>
+            <input type="text" id="g-stat4" value="98%">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── HOME PAGE (HERO) ── -->
+    <div class="panel" id="panel-hero">
+      <div class="section-head">
+        <div><h2>Home Page</h2><p>Main headline, subtext, and trust badges shown above the fold</p></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Headline & Subtext</div>
+        <div class="form-grid cols1">
+          <div class="form-group">
+            <label>Main Headline (hero_theme)</label>
+            <textarea id="h-headline" style="min-height:60px;">Stop Renting, Start Investing, Start Earning</textarea>
+            <span class="help">Use line breaks for emphasis. Rendered as the big heading.</span>
+          </div>
+          <div class="form-group">
+            <label>Subheadline (hero_subtheme)</label>
+            <textarea id="h-sub">Affordable, safe, and convenient Condominiums designed for modern Filipino families. Your dream home starts here.</textarea>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot blue"></span>Trust Badges</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Badge 1</label>
+            <input type="text" id="h-badge1" value="HLURB Licensed">
+          </div>
+          <div class="form-group">
+            <label>Badge 2</label>
+            <input type="text" id="h-badge2" value="Pag-Ibig Accredited">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot yellow"></span>CTA Button</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>CTA Button Text</label>
+            <input type="text" id="h-cta" value="Browse Units">
+            <span class="help">The big call-to-action button in the hero (links to #units)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── WHY US ── -->
+    <div class="panel" id="panel-whyus">
+      <div class="section-head">
+        <div><h2>Why Us Section</h2><p>The 6 selling points shown in the green "Why Choose Finihomes?" section</p></div>
+        <button class="add-btn" style="width:auto;padding:8px 16px;" onclick="addWhyUs()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add Point
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Section Heading</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Section Label (small text above)</label>
+            <input type="text" id="why-label" value="See It For Yourself">
+          </div>
+          <div class="form-group">
+            <label>Section Title</label>
+            <input type="text" id="why-title" value="Why Choose Finihomes?">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot blue"></span>Feature Points</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Each point appears with an icon, title, and description. Icons are fixed (shield, wallet, map-pin, waves, trending-up, users).</p>
+        <div class="list-items" id="whyus-list"></div>
+      </div>
+    </div>
+
+    <!-- ── PAYMENT OPTIONS ── -->
+    <div class="panel" id="panel-payment">
+      <div class="section-head">
+        <div><h2>Payment Options</h2><p>The financing cards shown in the payment section</p></div>
+        <button class="add-btn" style="width:auto;padding:8px 16px;" onclick="addPayment()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add Option
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Section Heading</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Section Label</label>
+            <input type="text" id="pay-label" value="Flexible Terms">
+          </div>
+          <div class="form-group">
+            <label>Section Title</label>
+            <input type="text" id="pay-title" value="Payment Options">
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot blue"></span>Payment Cards</div>
+        <div class="list-items" id="payment-list"></div>
+      </div>
+    </div>
+
+    <!-- ── CONTACT ── -->
+    <div class="panel" id="panel-contact">
+      <div class="section-head">
+        <div><h2>Contact Information</h2><p>Displayed in the contact section and footer</p></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot yellow"></span>Section Headings</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Contact Section Title</label>
+            <input type="text" id="c-title" value="Contact Us">
+            <span class="help">Big heading shown in the green contact section</span>
+          </div>
+          <div class="form-group">
+            <label>Nav Logo Text</label>
+            <input type="text" id="c-nav-logo" value="Finihomes - Marilao">
+            <span class="help">Text shown beside the logo in the top navigation bar</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Contact Details</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Email 1 (Primary)</label>
+            <input type="email" id="c-email" value="joven.rebuyas910@gmail.com">
+          </div>
+          <div class="form-group">
+            <label>Email 2 (Secondary)</label>
+            <input type="email" id="c-email2" value="johnpauldumigpi.rebuyas@gmail.com">
+            <span class="help">Shown in the footer alongside the primary email.</span>
+          </div>
+          <div class="form-group">
+            <label>Phone 1 (Primary)</label>
+            <input type="tel" id="c-phone" value="+63 945 744 6025">
+          </div>
+          <div class="form-group">
+            <label>Phone 2 (Secondary)</label>
+            <input type="tel" id="c-phone2" value="+63 977 773 0872">
+            <span class="help">Both numbers appear in the footer contact info.</span>
+          </div>
+          <div class="form-group">
+            <label>WhatsApp Number</label>
+            <input type="tel" id="c-whatsapp" value="+63 977 773 0872">
+            <span class="help">Used for the "Inquire on WhatsApp" button. Format: 639XXXXXXXXX</span>
+          </div>
+          <div class="form-group">
+            <label>Viber Number</label>
+            <input type="tel" id="c-viber" value="+63 977 773 0872">
+          </div>
+          <div class="form-group">
+            <label>Facebook URL</label>
+            <input type="url" id="c-fb-url" value="https://www.facebook.com/profile.php?id=100063976427768">
+          </div>
+          <div class="form-group">
+            <label>Facebook Display Name</label>
+            <input type="text" id="c-fb-name" value="Finihomes Exclusive">
+          </div>
+          <div class="form-group full">
+            <label>Office Address</label>
+            <input type="text" id="c-office" value="Valenzuela City, Metro Manila">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COLORS ── -->
+    <div class="panel" id="panel-colors">
+      <div class="section-head">
+        <div><h2>Colors & Fonts</h2><p>Brand palette and typography settings</p></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Color Palette</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Primary (Background)</label>
+            <div class="color-row">
+              <div class="color-swatch"><input type="color" id="col-bg" value="#2D6A4F" oninput="syncColor(this)"></div>
+              <input type="text" class="color-hex" id="col-bg-hex" value="#2D6A4F" oninput="syncHex(this,'col-bg')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Dark Primary</label>
+            <div class="color-row">
+              <div class="color-swatch"><input type="color" id="col-dark" value="#1B4332" oninput="syncColor(this)"></div>
+              <input type="text" class="color-hex" id="col-dark-hex" value="#1B4332" oninput="syncHex(this,'col-dark')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Light Primary</label>
+            <div class="color-row">
+              <div class="color-swatch"><input type="color" id="col-light" value="#40916C" oninput="syncColor(this)"></div>
+              <input type="text" class="color-hex" id="col-light-hex" value="#40916C" oninput="syncHex(this,'col-light')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Accent (Cream)</label>
+            <div class="color-row">
+              <div class="color-swatch"><input type="color" id="col-cream" value="#FDE68A" oninput="syncColor(this)"></div>
+              <input type="text" class="color-hex" id="col-cream-hex" value="#FDE68A" oninput="syncHex(this,'col-cream')">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Warm White (Page BG)</label>
+            <div class="color-row">
+              <div class="color-swatch"><input type="color" id="col-warm" value="#FAFAF5" oninput="syncColor(this)"></div>
+              <input type="text" class="color-hex" id="col-warm-hex" value="#FAFAF5" oninput="syncHex(this,'col-warm')">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot blue"></span>Typography</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Display Font (headings)</label>
+            <select id="font-display">
+              <option selected>Playfair Display</option>
+              <option>Cormorant Garamond</option>
+              <option>Libre Baskerville</option>
+              <option>Merriweather</option>
+              <option>Lora</option>
+              <option>DM Serif Display</option>
+              <option>Crimson Text</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Body Font</label>
+            <select id="font-body">
+              <option selected>DM Sans</option>
+              <option>Inter</option>
+              <option>Nunito</option>
+              <option>Poppins</option>
+              <option>Plus Jakarta Sans</option>
+              <option>Outfit</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Base Font Size (px)</label>
+            <input type="number" id="font-size" value="16" min="12" max="22">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── UNITS ── -->
+    <div class="panel" id="panel-units">
+      <div class="section-head">
+        <div><h2>Available Units</h2><p>Edit unit types, sizes, pricing, and features</p></div>
+        <button class="add-btn" style="width:auto;padding:8px 16px;" onclick="addUnit()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add Unit
+        </button>
+      </div>
+      <div class="list-items" id="units-list"></div>
+    </div>
+
+    <!-- ── PROJECTS ── -->
+    <div class="panel" id="panel-projects">
+      <div class="section-head">
+        <div><h2>Projects / Roadmap</h2><p>Development history and current projects</p></div>
+        <button class="add-btn" style="width:auto;padding:8px 16px;" onclick="addProject()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add Project
+        </button>
+      </div>
+      <div class="list-items" id="projects-list"></div>
+    </div>
+
+    <!-- ── AMENITIES ── -->
+    <div class="panel" id="panel-amenities">
+      <div class="section-head">
+        <div><h2>Amenities</h2><p>Facilities available inside the community</p></div>
+        <button class="add-btn" style="width:auto;padding:8px 16px;" onclick="addAmenity()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add Amenity
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Section Heading</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Section Label (small text above)</label>
+            <input type="text" id="am-label" value="Live in Comfort">
+          </div>
+          <div class="form-group">
+            <label>Section Title</label>
+            <input type="text" id="am-title" value="World-Class Amenities">
+          </div>
+        </div>
+      </div>
+      <div class="list-items" id="amenities-list"></div>
+    </div>
+
+    <!-- ── TESTIMONIALS ── -->
+    <div class="panel" id="panel-testimonials">
+      <div class="section-head">
+        <div><h2>Testimonials</h2><p>Homeowner reviews displayed in the marquee strip</p></div>
+        <button class="add-btn" style="width:auto;padding:8px 16px;" onclick="addTestimonial()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add Testimonial
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Section Heading</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Section Label (small text above)</label>
+            <input type="text" id="test-label" value="What homeowners say">
+          </div>
+          <div class="form-group">
+            <label>Section Title</label>
+            <input type="text" id="test-title" value="Testimonials">
+          </div>
+        </div>
+      </div>
+      <div class="list-items" id="testimonials-list"></div>
+    </div>
+
+    <!-- ── MEDIA ── -->
+    <div class="panel" id="panel-media">
+      <div class="section-head">
+        <div>
+          <h2>Media Library</h2>
+          <p>Upload and manage all images and videos used across your site</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span class="media-tag"><span class="dot img"></span><span id="img-count">0</span> images</span>
+          <span class="media-tag"><span class="dot vid"></span><span id="vid-count">0</span> videos</span>
+        </div>
+      </div>
+
+      <!-- Hero background -->
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Hero Background</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">The background image of the hero section (Homepage.jpg)</p>
+        <div class="section-split">
+          <div class="drop-zone" id="dz-hero" ondragover="dzOver(event,'dz-hero')" ondragleave="dzLeave('dz-hero')" ondrop="dzDrop(event,'dz-hero','hero-bg')">
+            <input type="file" accept="image/*" onchange="handleFile(this,'dz-hero','hero-bg')">
+            <div class="dz-icon"><svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+            <div class="dz-title">Drop image or click to upload</div>
+            <div class="dz-sub">Replaces Homepage.jpg · JPG, PNG, WebP</div>
+          </div>
+          <div id="preview-hero-bg" style="display:none;" class="media-tile has-media">
+            <img id="prev-img-hero-bg" src="" alt="Hero BG">
+            <div class="tile-label">hero-bg (Homepage.jpg)</div>
+            <div class="tile-overlay">
+              <button class="tile-action" onclick="reupload('dz-hero')">Replace</button>
+              <button class="tile-action danger" onclick="clearMedia('hero-bg','dz-hero')">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Why video -->
+      <div class="card">
+        <div class="card-title"><span class="dot blue"></span>Why Us — Video Reel</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Portrait video shown in the "Why Choose Finihomes?" section (Finihomes Video.mp4)</p>
+        <div class="section-split">
+          <div class="drop-zone" id="dz-video" ondragover="dzOver(event,'dz-video')" ondragleave="dzLeave('dz-video')" ondrop="dzDrop(event,'dz-video','why-video')">
+            <input type="file" accept="video/*" onchange="handleFile(this,'dz-video','why-video')">
+            <div class="dz-icon"><svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/></svg></div>
+            <div class="dz-title">Drop video or click to upload</div>
+            <div class="dz-sub">Replaces Finihomes Video.mp4 · MP4, WebM, MOV</div>
+          </div>
+          <div id="preview-why-video" style="display:none;" class="media-tile has-media">
+            <video id="prev-vid-why-video" src="" muted loop playsinline></video>
+            <div class="tile-label">why-video (Finihomes Video.mp4)</div>
+            <div class="tile-overlay">
+              <button class="tile-action" onclick="reupload('dz-video')">Replace</button>
+              <button class="tile-action danger" onclick="clearMedia('why-video','dz-video')">Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project images -->
+      <div class="card">
+        <div class="card-title"><span class="dot yellow"></span>Project Images</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Card images for each project in the roadmap section. Each project supports up to 4 photos in the modal carousel.</p>
+        <div class="media-grid" id="proj-images-grid">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Unit images -->
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Unit Images</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Floor plan / preview images shown in the unit carousel. Each unit supports up to 4 photos in the modal carousel.</p>
+        <div class="media-grid" id="unit-images-grid">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Amenity images -->
+      <div class="card">
+        <div class="card-title"><span class="dot blue"></span>Amenity Images</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Photos shown on each amenity card</p>
+        <div class="media-grid" id="amenity-images-grid">
+          <!-- rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Extra / misc uploads -->
+      <div class="card">
+        <div class="card-title"><span class="dot yellow"></span>Additional Files</div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">Upload any other image or video files used by your site</p>
+        <div class="drop-zone" id="dz-extra" ondragover="dzOver(event,'dz-extra')" ondragleave="dzLeave('dz-extra')" ondrop="dzDropExtra(event)">
+          <input type="file" accept="image/*,video/*" multiple onchange="handleExtraFiles(this)">
+          <div class="dz-icon"><svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg></div>
+          <div class="dz-title">Drop files or click to upload multiple</div>
+          <div class="dz-sub">Images or videos · will appear in the grid below</div>
+        </div>
+        <div class="media-grid" id="extra-grid" style="margin-top:14px;"></div>
+      </div>
+
+      <!-- How to apply -->
+      <div class="card" style="border-color:rgba(88,166,255,0.25);background:rgba(88,166,255,0.05);">
+        <div class="card-title" style="border-color:rgba(88,166,255,0.2);"><span class="dot blue"></span>How to apply uploaded files</div>
+        <p style="font-size:13px;color:var(--text-muted);line-height:1.7;">
+          Files uploaded here are stored as <strong style="color:var(--text);">Object URLs</strong> in your browser session so you can preview them.
+          To permanently apply them to your site, use the <strong style="color:var(--text);">"Download All Media"</strong> button below — it will download a ZIP-like bundle.
+          Then place the files in the <strong style="color:var(--text);">same folder</strong> as your <code style="background:var(--surface3);padding:1px 5px;border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;">index.html</code>, replacing files with the same name.
+        </p>
+        <button class="export-btn" style="margin-top:14px;width:auto;display:inline-flex;" onclick="downloadAllMedia()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          Download All Media Files
+        </button>
+      </div>
+    </div>
+
+    <!-- ── FAQ ── -->
+    <div class="panel" id="panel-faq">
+      <div class="section-head">
+        <div><h2>FAQ</h2><p>Frequently asked questions and answers</p></div>
+        <button class="add-btn" style="width:auto;padding:8px 16px;" onclick="addFaq()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+          Add FAQ
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot green"></span>Section Heading</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Section Label (small text above)</label>
+            <input type="text" id="faq-label" value="Common Questions">
+          </div>
+          <div class="form-group">
+            <label>Section Title</label>
+            <input type="text" id="faq-title" value="Frequently Asked Questions">
+          </div>
+        </div>
+      </div>
+      <div class="list-items" id="faq-list"></div>
+    </div>
+
+    <!-- ── PARTNERS ── -->
+    <div class="panel" id="panel-partners">
+      <div class="section-head">
+        <div><h2>Accepted Partners</h2><p>Payment partner cards shown in the financing section</p></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="dot yellow"></span>Section Heading</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Section Label (small text above)</label>
+            <input type="text" id="part-label" value="Flexible Payment">
+          </div>
+          <div class="form-group">
+            <label>Section Title</label>
+            <input type="text" id="part-title" value="Accepted Partners">
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(88,166,255,0.2);background:rgba(88,166,255,0.04);">
+        <div class="card-title" style="border-color:rgba(88,166,255,0.15);"><span class="dot blue"></span>Info</div>
+        <p style="font-size:13px;color:var(--text-muted);line-height:1.7;">The partner cards (Pag-IBIG, Bank Financing, etc.) are managed under <strong style="color:var(--text);">Payment Options</strong> in the sidebar. Go there to edit their titles, descriptions, and feature bullets.</p>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div id="toast"></div>
+
+</div><!-- /app-shell -->
+
+<script>
+// ══════════════════════ DATA ══════════════════════
+let data = {
+  units: [
+    { name: 'Studio', size: '18.5–19 sqm', price: '₱1.66M – ₱1.71M', amort: '20 Years = ₱11k–₱12k/mo | 30 Years = ₱10k/mo', beds: 'Studio', bath: '1', img: 'studio.png', features: ['Open layout', 'Built-in closet', 'Kitchen counter', 'Balcony ready'], ideal: 'Students, young professionals, or investors looking for rental income.' },
+    { name: '1 Bedroom', size: '24–29 sqm', price: '₱2.15M – ₱2.33M', amort: '20 Years = ₱15k–₱18k/mo | 30 Years = ₱13k–₱16k/mo', beds: '1 Bedroom', bath: '1', img: '1br.png', features: ['Separate bedroom', 'Living & dining area', 'T&B with provisions', 'Balcony'], ideal: 'Young couples or small families starting their home journey.' },
+    { name: '2 Bedroom', size: '33–40.5 sqm', price: '₱3.03M – ₱3.64M', amort: '20 Years = ₱21k–₱26k/mo | 30 Years = ₱18k–₱22k/mo', beds: '2 Bedrooms', bath: '1', img: '2br.png', features: ['2 separate bedrooms', 'Spacious living area', 'Kitchen with counter', 'Service balcony'], ideal: 'Growing families who need extra space and privacy.' },
+    { name: '3 Bedroom', size: '49–49.5 sqm', price: '₱4.39M – ₱4.67M', amort: '20 Years = ₱31k–₱32k/mo | 30 Years = ₱26k–₱27k/mo', beds: '3 Bedrooms', bath: '2', img: '3br.png', features: ['3 spacious bedrooms', 'Large living & dining', 'Kitchen with counter', 'Dual service areas'], ideal: 'Large families who want comfort and plenty of space for everyone.' }
+  ],
+  projects: [
+    { name: 'Finihomes Marulas', location: 'Ramon Delfin, Valenzuela, Metro Manila', status: 'Fully Occupied', year: '2016', buildings: 5, units: '2,000+', desc: 'Our flagship project featuring mid-rise condominiums with complete amenities.', mapQuery: '14.6699415,120.983811', nearby: ['SM Valenzuela (5 min)', 'Fatima University (10 min)', 'Valenzuela Medical Center (8 min)', 'LRT Line 1 Extension (15 min)'] },
+    { name: 'Buildersville Residences', location: 'Marindal, Valenzuela, Metro Manila', status: 'Fully Occupied', year: '2022', buildings: 3, units: '1,500+', desc: 'A modern residential community offering affordable yet premium living spaces.', mapQuery: '14.6963116,120.9612042', nearby: ['Puregold Marindal (3 min)', 'Valenzuela City Hall (10 min)', 'Karuhatan Market (5 min)', 'NLEX Interchange (12 min)'] },
+    { name: 'Finihomes Marilao', location: 'Ibayo, Marilao, Bulacan', status: 'Ready for Occupancy', year: 'Ongoing', buildings: 6, units: '400+', desc: 'Our newest development in the fast-growing Bulacan corridor.', mapQuery: '14.7513713,120.953596', nearby: ['SM Marilao (8 min)', 'Marilao Municipal Hall (5 min)', 'Philippine Arena (20 min)', 'NLEX Marilao Exit (7 min)'] }
+  ],
+  amenities: [
+    { name: '24/7 Security', img: 'security.jpg', imgPosition: '50% 70%', desc: 'Round-the-clock security personnel with CCTV monitoring for your peace of mind.', extras: ['CCTV surveillance', 'Guard house at entry', 'Visitor management system'] },
+    { name: 'Announcement Board', img: 'board.jpg', imgPosition: '50% 50%', desc: 'Centrally located announcement board to keep residents informed of community news and updates.', extras: ['Community notices', 'Event announcements', 'HOA updates and reminders'] },
+    { name: 'Commercial Center', img: 'commercial-center.jpg', imgPosition: '50% 50%', desc: "On-site commercial area with shops and services for residents' everyday needs.", extras: ['Convenience store', 'Laundry shop', 'Food stalls'] },
+    { name: 'Landscaped Park', img: 'park.jpg', imgPosition: '50% 55%', desc: 'Beautifully designed green spaces with walking paths and seating areas.', extras: ['Jogging path', 'Garden benches', 'Playground for kids'] },
+    { name: 'Locker Cabinet', img: 'locker.jpg', imgPosition: '50% 50%', desc: 'Secure locker cabinets for residents to safely store personal belongings within the building.', extras: ['Individual lockers per unit', 'Secure locking mechanism', 'Conveniently located near lobby'] },
+    { name: 'Lounge', img: 'lounge.jpg', imgPosition: '50% 60%', desc: 'Air-conditioned lounge area where residents can relax, work, or socialize.', extras: ['Air-conditioned space', 'Comfortable seating', 'Available for events and gatherings'] },
+    { name: 'Multi-Function Hall', img: 'hall.jpg', imgPosition: '50% 50%', desc: 'Spacious multi-purpose hall available for events, gatherings, and community activities.', extras: ['Flexible event space', 'Available for reservation', 'Suitable for parties and meetings'] },
+    { name: 'Parking Lot', img: 'parking.jpg', imgPosition: '50% 75%', desc: 'Dedicated parking spaces for residents and visitors within the compound.', extras: ['Covered parking slots', 'Visitor parking area', 'Well-lit at night'] },
+    { name: 'Stairway & Elevator', img: 'way.jpg', imgPosition: '50% 50%', desc: 'Well-maintained stairways and elevators for safe and convenient access to all floors.', extras: ['Passenger elevators', 'Emergency stairways', 'Accessible for PWDs'] },
+    { name: 'Swimming Pool', img: 'pool.jpg', imgPosition: '50% 55%', desc: 'Resort-style swimming pool for relaxation and recreation for all ages.', extras: ['Adult pool', 'Kiddie pool', 'Pool-side lounge area'] }
+  ],
+  testimonials: [
+    { name: 'Maria Santos', text: 'Moving to Finihomes was the best decision for our family. The amenities are world-class and the community is wonderful. We feel safe and happy every day!', rating: 5 },
+    { name: 'Juan Dela Cruz', text: 'As an OFW, I wanted a secure investment back home. Finihomes made it easy with Pag-Ibig financing. Now my family has a beautiful home to call their own.', rating: 5 },
+    { name: 'Ana Reyes', text: 'The in-house financing made it possible for me to get my first condo. The process was smooth and the staff were very helpful throughout. Highly recommended!', rating: 5 },
+    { name: 'Carlos Mendoza', text: 'I compared many developers and Finihomes offered the best value. Great location, modern design, and affordable monthly payments. Worth every peso!', rating: 4 },
+    { name: 'Lisa Garcia', text: 'The swimming pool and landscaped gardens are my favorite. It feels like living in a resort! The 24/7 security gives me peace of mind as a single mom.', rating: 5 },
+    { name: 'Roberto Cruz', text: 'From reservation to turnover, Finihomes delivered exactly what they promised. No hidden fees, no delays. A trustworthy developer!', rating: 5 }
+  ],
+  faq: [
+    { q: 'What are the payment options available?', a: 'We offer five flexible payment schemes — Spot Cash, Deferred Cash, In-House Financing, Bank Financing, and Pag-IBIG Fund Financing. Our team will help you find the best option based on your financial situation.' },
+    { q: 'How much is the reservation fee?', a: 'The reservation fee is ₱20,000 for all unit types. This amount is applied toward your total contract price.' },
+    { q: 'Is Finihomes HLURB or DHSUD licensed?', a: 'Yes. All Finihomes projects are fully licensed by DHSUD and accredited by Pag-IBIG Fund, ensuring that your investment is secure and protected.' },
+    { q: 'Can OFWs buy a unit?', a: 'Absolutely. We have a streamlined process for OFW buyers, including online reservation and flexible documentation requirements. Pag-IBIG OFW financing is also available.' },
+    { q: 'When can I move in?', a: 'Finihomes Square Marilao is already Ready for Occupancy. You can move in as soon as your Pag-IBIG or bank loan is released, or immediately upon full payment.' },
+    { q: 'Are pets allowed?', a: 'Small pets are generally allowed subject to the homeowners association guidelines. Please inquire directly for specific pet policies.' },
+    { q: 'How much are the association dues?', a: 'Association dues are charged at ₱80 per sqm per month. For example, a 24 sqm unit would have monthly dues of approximately ₱1,920.' },
+    { q: 'Is there a parking slot available?', a: 'Parking slots are available for purchase separately. They are not included in the unit price. Please contact us for current availability and pricing.' }
+  ],
+  whyus: [
+    { title: 'Trusted Developer', desc: 'HLURB licensed and Pag-IBIG accredited with 12+ years of delivering quality homes on schedule.' },
+    { title: 'Flexible Payment', desc: 'Pag-IBIG, bank loans, or in-house financing — we make sure payment fits your budget and lifestyle.' },
+    { title: 'Prime Locations', desc: 'Close to schools, hospitals, malls, and transport hubs in Metro Manila and Bulacan.' },
+    { title: 'Resort-Style Amenities', desc: 'Swimming pool, landscaped park, A/C lounge, and 24/7 security — all inside your community.' },
+    { title: 'Smart Investment', desc: 'Stop renting and start building equity. Ideal for OFWs and investors seeking rental income.' },
+    { title: 'Community Living', desc: 'A safe, family-friendly environment with 98% homeowner satisfaction across all projects.' }
+  ],
+  payment: [
+    { title: 'Pag-IBIG Financing', desc: 'Government-backed housing loan with low interest rates and long terms up to 30 years.', features: ['Low interest rates', 'Up to 30-year term', 'For employed & OFWs'] },
+    { title: 'Bank Loan', desc: 'Flexible bank mortgage options with competitive rates from major Philippine banks.', features: ['Competitive rates', 'Multiple bank options', 'Fast approval process'] },
+    { title: 'Deferred Financing', desc: 'Pay later with structured deferred payment schemes designed for flexible cash flow management.', features: ['Structured payment schedule', 'Grace period options', 'Ideal for pre-selling units'] },
+    { title: 'Spot Cash', desc: 'Pay in full and enjoy the best discounts and priority unit selection available.', features: ['Maximum discounts', 'Priority unit selection', 'Fastest turnover'] },
+    { title: 'In-House Financing', desc: 'Our own financing program with easy requirements — perfect for those who need quick approval.', features: ['Minimal requirements', 'No income docs needed', 'Move in within weeks'] }
+  ]
+};
+
+// ══════════════════════ NAV ══════════════════════
+const panelTitles = {
+  general: 'General Settings', hero: 'Home Page', whyus: 'Why Us Section', payment: 'Payment Options',
+  contact: 'Contact Information', colors: 'Colors & Fonts', units: 'Available Units', projects: 'Projects / Roadmap',
+  amenities: 'Amenities', media: 'Media Library', testimonials: 'Testimonials', faq: 'FAQ'
+};
+
+function switchPanel(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  const name = el.dataset.panel;
+  document.getElementById('panel-' + name).classList.add('active');
+  document.getElementById('panel-title').textContent = panelTitles[name];
+  // Close sidebar on mobile after navigation
+  if (window.innerWidth <= 768) closeSidebar();
+}
+
+// ══════════════════════ SIDEBAR TOGGLE (MOBILE) ══════════════════════
+function toggleSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  const isOpen = sidebar.classList.contains('open');
+  if (isOpen) { closeSidebar(); } else { openSidebar(); }
+}
+function openSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.add('open');
+  overlay.classList.add('visible');
+  document.getElementById('hamburger-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+}
+function closeSidebar() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+  sidebar.classList.remove('open');
+  overlay.classList.remove('visible');
+  document.getElementById('hamburger-icon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>';
+}
+
+// ══════════════════════ ACCORDION ══════════════════════
+function toggleItem(id) {
+  const body = document.getElementById('body-' + id);
+  const chev = document.getElementById('chev-' + id);
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+// ══════════════════════ ARRAY FIELD HELPERS ══════════════════════
+function renderArrayField(containerId, arr, placeholder) {
+  const c = document.getElementById(containerId);
+  c.innerHTML = arr.map((v, i) => `
+    <div class="array-row" id="${containerId}-row-${i}">
+      <input type="text" value="${escHtml(v)}" placeholder="${placeholder}" oninput="updateArrayField('${containerId}',${i},this.value)">
+      <div class="array-del" onclick="removeArrayItem('${containerId}',${i})" title="Remove">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+      </div>
+    </div>
+  `).join('') + `<button class="array-add" onclick="addArrayItem('${containerId}')">+ Add item</button>`;
+}
+
+// Store temp arrays
+const tempArrays = {};
+
+function initTempArray(id, arr) { tempArrays[id] = [...arr]; }
+function updateArrayField(id, i, val) { tempArrays[id][i] = val; markUnsaved(); }
+function removeArrayItem(id, i) {
+  tempArrays[id].splice(i, 1);
+  renderArrayField(id, tempArrays[id], '');
+  markUnsaved();
+}
+function addArrayItem(id) {
+  tempArrays[id].push('');
+  renderArrayField(id, tempArrays[id], '');
+  markUnsaved();
+}
+
+// ══════════════════════ RENDER LISTS ══════════════════════
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const statusOptions = ['Fully Occupied','Ready for Occupancy','Pre-Selling','Under Construction'];
+
+function renderUnits() {
+  const list = document.getElementById('units-list');
+  document.getElementById('nb-units').textContent = data.units.length;
+  list.innerHTML = data.units.map((u, i) => `
+    <div class="list-item">
+      <div class="list-item-header" onclick="toggleItem('unit-${i}')">
+        <div class="item-num">${i+1}</div>
+        <div class="item-title">${escHtml(u.name)}</div>
+        <span class="item-badge badge-blue">${escHtml(u.size)}</span>
+        <span class="item-badge badge-green">${escHtml(u.price)}</span>
+        <button class="del-btn" onclick="event.stopPropagation();deleteUnit(${i})">Remove</button>
+        <svg id="chev-unit-${i}" class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="list-item-body" id="body-unit-${i}">
+        <div class="form-grid" style="margin-top:14px;">
+          <div class="form-group">
+            <label>Unit Name</label>
+            <input type="text" value="${escHtml(u.name)}" oninput="data.units[${i}].name=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Size</label>
+            <input type="text" value="${escHtml(u.size)}" oninput="data.units[${i}].size=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Price Range</label>
+            <input type="text" value="${escHtml(u.price)}" oninput="data.units[${i}].price=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Beds</label>
+            <input type="text" value="${escHtml(u.beds)}" oninput="data.units[${i}].beds=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Bathrooms</label>
+            <input type="text" value="${escHtml(u.bath)}" oninput="data.units[${i}].bath=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Image filename</label>
+            <input type="text" value="${escHtml(u.img)}" oninput="data.units[${i}].img=this.value;markUnsaved()">
+          </div>
+          <div class="form-group full">
+            <label>Modal Photos (filenames for carousel — Photo 2, 3, 4)</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px;">
+              ${[2,3,4].map(n => {
+                const key = `images_${n}`;
+                const val = escHtml((u.images && u.images[n-1]) || '');
+                return `<div><span style="font-size:10px;color:var(--text-faint);font-family:'DM Mono',monospace;display:block;margin-bottom:3px;">Photo ${n}</span>
+                  <input type="text" value="${val}" placeholder="e.g. studio${n}.png" oninput="if(!data.units[${i}].images)data.units[${i}].images=[];data.units[${i}].images[${n-1}]=this.value;markUnsaved()"></div>`;
+              }).join('')}
+            </div>
+            <span class="help">Photo 1 is the main image above. These fill slots 2–4 in the unit modal carousel.</span>
+          </div>
+          <div class="form-group full">
+            <label>Amortization</label>
+            <input type="text" value="${escHtml(u.amort)}" oninput="data.units[${i}].amort=this.value;markUnsaved()">
+          </div>
+          <div class="form-group full">
+            <label>Ideal For</label>
+            <input type="text" value="${escHtml(u.ideal)}" oninput="data.units[${i}].ideal=this.value;markUnsaved()">
+          </div>
+          <div class="form-group full">
+            <label>Features</label>
+            <div class="array-field" id="af-unit-feat-${i}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  data.units.forEach((u, i) => {
+    initTempArray(`af-unit-feat-${i}`, u.features);
+    renderArrayField(`af-unit-feat-${i}`, u.features, 'Feature');
+  });
+}
+
+function renderProjects() {
+  const list = document.getElementById('projects-list');
+  document.getElementById('nb-projects').textContent = data.projects.length;
+  list.innerHTML = data.projects.map((p, i) => `
+    <div class="list-item">
+      <div class="list-item-header" onclick="toggleItem('proj-${i}')">
+        <div class="item-num">${i+1}</div>
+        <div class="item-title">${escHtml(p.name)}</div>
+        <span class="item-badge ${p.status==='Fully Occupied'?'badge-red':p.status==='Ready for Occupancy'?'badge-green':'badge-yellow'}">${escHtml(p.status)}</span>
+        <button class="del-btn" onclick="event.stopPropagation();deleteProject(${i})">Remove</button>
+        <svg id="chev-proj-${i}" class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="list-item-body" id="body-proj-${i}">
+        <div class="form-grid" style="margin-top:14px;">
+          <div class="form-group">
+            <label>Project Name</label>
+            <input type="text" value="${escHtml(p.name)}" oninput="data.projects[${i}].name=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Year / Label</label>
+            <input type="text" value="${escHtml(p.year||'')}" oninput="data.projects[${i}].year=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input type="text" value="${escHtml(p.location)}" oninput="data.projects[${i}].location=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select onchange="data.projects[${i}].status=this.value;markUnsaved()">
+              ${statusOptions.map(s=>`<option ${p.status===s?'selected':''}>${escHtml(s)}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Buildings</label>
+            <input type="number" value="${p.buildings||''}" oninput="data.projects[${i}].buildings=+this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Total Units</label>
+            <input type="text" value="${escHtml(p.units||'')}" oninput="data.projects[${i}].units=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Map Coordinates</label>
+            <input type="text" value="${escHtml(p.mapQuery||'')}" oninput="data.projects[${i}].mapQuery=this.value;markUnsaved()">
+            <span class="help">Format: lat,lng — e.g. 14.6699415,120.983811</span>
+          </div>
+          <div class="form-group">
+            <label>Image filename</label>
+            <input type="text" value="${escHtml(p.img||'')}" placeholder="e.g. Marulas.png" oninput="data.projects[${i}].img=this.value;markUnsaved()">
+          </div>
+          <div class="form-group full">
+            <label>Modal Photos (filenames for carousel — Photo 2, 3, 4)</label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px;">
+              ${[2,3,4].map(n => {
+                const key = `images_${n}`;
+                const val = escHtml((p.images && p.images[n-1]) || '');
+                return `<div><span style="font-size:10px;color:var(--text-faint);font-family:'DM Mono',monospace;display:block;margin-bottom:3px;">Photo ${n}</span>
+                  <input type="text" value="${val}" placeholder="e.g. marulas${n}.png" oninput="if(!data.projects[${i}].images)data.projects[${i}].images=[];data.projects[${i}].images[${n-1}]=this.value;markUnsaved()"></div>`;
+              }).join('')}
+            </div>
+            <span class="help">Photo 1 is the main image above. These fill slots 2–4 in the project modal carousel.</span>
+          </div>
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea oninput="data.projects[${i}].desc=this.value;markUnsaved()">${escHtml(p.desc)}</textarea>
+          </div>
+          <div class="form-group full">
+            <label>Nearby Places</label>
+            <div class="array-field" id="af-proj-nearby-${i}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  data.projects.forEach((p, i) => {
+    initTempArray(`af-proj-nearby-${i}`, p.nearby||[]);
+    renderArrayField(`af-proj-nearby-${i}`, p.nearby||[], 'Nearby place (e.g. SM Mall (5 min))');
+  });
+}
+
+function renderAmenities() {
+  const list = document.getElementById('amenities-list');
+  document.getElementById('nb-amenities').textContent = data.amenities.length;
+  list.innerHTML = data.amenities.map((a, i) => `
+    <div class="list-item">
+      <div class="list-item-header" onclick="toggleItem('am-${i}')">
+        <div class="item-num">${i+1}</div>
+        <div class="item-title">${escHtml(a.name)}</div>
+        <span class="item-badge badge-blue">${escHtml(a.img||'No image')}</span>
+        <button class="del-btn" onclick="event.stopPropagation();deleteAmenity(${i})">Remove</button>
+        <svg id="chev-am-${i}" class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="list-item-body" id="body-am-${i}">
+        <div class="form-grid" style="margin-top:14px;">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" value="${escHtml(a.name)}" oninput="data.amenities[${i}].name=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Image filename</label>
+            <input type="text" value="${escHtml(a.img||'')}" oninput="data.amenities[${i}].img=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Image Position (CSS)</label>
+            <input type="text" value="${escHtml(a.imgPosition||'50% 50%')}" placeholder="50% 50%" oninput="data.amenities[${i}].imgPosition=this.value;markUnsaved()">
+          </div>
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea oninput="data.amenities[${i}].desc=this.value;markUnsaved()">${escHtml(a.desc)}</textarea>
+          </div>
+          <div class="form-group full">
+            <label>Bullet Points</label>
+            <div class="array-field" id="af-am-extras-${i}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  data.amenities.forEach((a, i) => {
+    initTempArray(`af-am-extras-${i}`, a.extras||[]);
+    renderArrayField(`af-am-extras-${i}`, a.extras||[], 'Bullet point');
+  });
+}
+
+function renderTestimonials() {
+  const list = document.getElementById('testimonials-list');
+  document.getElementById('nb-testimonials').textContent = data.testimonials.length;
+  list.innerHTML = data.testimonials.map((t, i) => `
+    <div class="list-item">
+      <div class="list-item-header" onclick="toggleItem('test-${i}')">
+        <div class="item-num">${i+1}</div>
+        <div class="item-title">${escHtml(t.name)}</div>
+        <span class="item-badge badge-yellow">${'★'.repeat(t.rating)}${'☆'.repeat(5-t.rating)}</span>
+        <button class="del-btn" onclick="event.stopPropagation();deleteTestimonial(${i})">Remove</button>
+        <svg id="chev-test-${i}" class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="list-item-body" id="body-test-${i}">
+        <div class="form-grid cols1" style="margin-top:14px;">
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" value="${escHtml(t.name)}" oninput="data.testimonials[${i}].name=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Review</label>
+            <textarea oninput="data.testimonials[${i}].text=this.value;markUnsaved()">${escHtml(t.text)}</textarea>
+          </div>
+          <div class="form-group">
+            <label>Rating</label>
+            <div class="star-input" id="stars-${i}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  data.testimonials.forEach((t, i) => renderStars(i, t.rating));
+}
+
+function renderStars(idx, rating) {
+  const c = document.getElementById('stars-' + idx);
+  if (!c) return;
+  c.innerHTML = [1,2,3,4,5].map(s => `<span onclick="setRating(${idx},${s})" style="color:${s<=rating?'#FDE68A':'#484F58'}">${s<=rating?'★':'☆'}</span>`).join('');
+}
+function setRating(idx, val) {
+  data.testimonials[idx].rating = val;
+  renderStars(idx, val);
+  markUnsaved();
+}
+
+function renderFaq() {
+  const list = document.getElementById('faq-list');
+  document.getElementById('nb-faq').textContent = data.faq.length;
+  list.innerHTML = data.faq.map((f, i) => `
+    <div class="list-item">
+      <div class="list-item-header" onclick="toggleItem('faq-${i}')">
+        <div class="item-num">${i+1}</div>
+        <div class="item-title" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:400px;">${escHtml(f.q)}</div>
+        <button class="del-btn" onclick="event.stopPropagation();deleteFaq(${i})">Remove</button>
+        <svg id="chev-faq-${i}" class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="list-item-body" id="body-faq-${i}">
+        <div class="form-grid cols1" style="margin-top:14px;">
+          <div class="form-group">
+            <label>Question</label>
+            <input type="text" value="${escHtml(f.q)}" oninput="data.faq[${i}].q=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Answer</label>
+            <textarea oninput="data.faq[${i}].a=this.value;markUnsaved()">${escHtml(f.a)}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════ ADD/DELETE ══════════════════════
+function addUnit() { data.units.push({ name: 'New Unit', size: '', price: '', amort: '', beds: '', bath: '1', img: '', features: [], ideal: '' }); renderUnits(); markUnsaved(); }
+function deleteUnit(i) { if (confirm('Remove this unit?')) { data.units.splice(i,1); renderUnits(); markUnsaved(); } }
+
+function addProject() { data.projects.push({ name: 'New Project', location: '', status: 'Pre-Selling', year: '', buildings: 1, units: '', desc: '', mapQuery: '', nearby: [] }); renderProjects(); markUnsaved(); }
+function deleteProject(i) { if (confirm('Remove this project?')) { data.projects.splice(i,1); renderProjects(); markUnsaved(); } }
+
+function addAmenity() { data.amenities.push({ name: 'New Amenity', img: '', imgPosition: '50% 50%', desc: '', extras: [] }); renderAmenities(); markUnsaved(); }
+function deleteAmenity(i) { if (confirm('Remove this amenity?')) { data.amenities.splice(i,1); renderAmenities(); markUnsaved(); } }
+
+function addTestimonial() { data.testimonials.push({ name: 'New Reviewer', text: '', rating: 5 }); renderTestimonials(); markUnsaved(); }
+function deleteTestimonial(i) { if (confirm('Remove this testimonial?')) { data.testimonials.splice(i,1); renderTestimonials(); markUnsaved(); } }
+
+function addFaq() { data.faq.push({ q: 'New Question?', a: '' }); renderFaq(); markUnsaved(); }
+function deleteFaq(i) { if (confirm('Remove this FAQ?')) { data.faq.splice(i,1); renderFaq(); markUnsaved(); } }
+
+// ══════════════════════ WHY US ══════════════════════
+function renderWhyUs() {
+  const list = document.getElementById('whyus-list');
+  if (!list) return;
+  list.innerHTML = data.whyus.map((w, i) => `
+    <div class="list-item">
+      <div class="list-item-header" onclick="toggleItem('why-${i}')">
+        <div class="item-num">${i+1}</div>
+        <div class="item-title">${escHtml(w.title)}</div>
+        <button class="del-btn" onclick="event.stopPropagation();deleteWhyUs(${i})">Remove</button>
+        <svg id="chev-why-${i}" class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="list-item-body" id="body-why-${i}">
+        <div class="form-grid cols1" style="margin-top:14px;">
+          <div class="form-group">
+            <label>Title</label>
+            <input type="text" value="${escHtml(w.title)}" oninput="data.whyus[${i}].title=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea oninput="data.whyus[${i}].desc=this.value;markUnsaved()">${escHtml(w.desc)}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+function addWhyUs() { data.whyus.push({ title: 'New Feature', desc: '' }); renderWhyUs(); markUnsaved(); }
+function deleteWhyUs(i) { if (confirm('Remove this point?')) { data.whyus.splice(i,1); renderWhyUs(); markUnsaved(); } }
+
+// ══════════════════════ PAYMENT OPTIONS ══════════════════════
+function renderPayment() {
+  const list = document.getElementById('payment-list');
+  if (!list) return;
+  list.innerHTML = data.payment.map((p, i) => `
+    <div class="list-item">
+      <div class="list-item-header" onclick="toggleItem('pay-${i}')">
+        <div class="item-num">${i+1}</div>
+        <div class="item-title">${escHtml(p.title)}</div>
+        <button class="del-btn" onclick="event.stopPropagation();deletePayment(${i})">Remove</button>
+        <svg id="chev-pay-${i}" class="chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="list-item-body" id="body-pay-${i}">
+        <div class="form-grid cols1" style="margin-top:14px;">
+          <div class="form-group">
+            <label>Title</label>
+            <input type="text" value="${escHtml(p.title)}" oninput="data.payment[${i}].title=this.value;markUnsaved()">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea oninput="data.payment[${i}].desc=this.value;markUnsaved()">${escHtml(p.desc)}</textarea>
+          </div>
+          <div class="form-group">
+            <label>Feature Bullets</label>
+            <div class="array-field" id="af-pay-feat-${i}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  data.payment.forEach((p, i) => {
+    initTempArray(`af-pay-feat-${i}`, p.features||[]);
+    renderArrayField(`af-pay-feat-${i}`, p.features||[], 'Feature (e.g. Low interest rates)');
+  });
+}
+function addPayment() { data.payment.push({ title: 'New Option', desc: '', features: [] }); renderPayment(); markUnsaved(); }
+function deletePayment(i) { if (confirm('Remove this payment option?')) { data.payment.splice(i,1); renderPayment(); markUnsaved(); } }
+
+// ══════════════════════ COLOR SYNC ══════════════════════
+function syncColor(el) {
+  const hexId = el.id + '-hex';
+  document.getElementById(hexId).value = el.value;
+  markUnsaved();
+}
+function syncHex(el, colorId) {
+  const v = el.value;
+  if (/^#[0-9A-Fa-f]{6}$/.test(v)) {
+    document.getElementById(colorId).value = v;
+    markUnsaved();
+  }
+}
+
+// ══════════════════════ SAVE / STATUS ══════════════════════
+let unsaved = false;
+function markUnsaved() {
+  unsaved = true;
+  document.getElementById('save-status').textContent = 'Unsaved changes';
+  document.querySelector('.status-dot').style.background = 'var(--warning)';
+  document.querySelector('.status-dot').style.boxShadow = '0 0 6px var(--warning)';
+  if (typeof updateDashboard === 'function') updateDashboard();
+}
+function markSaved() {
+  unsaved = false;
+  document.getElementById('save-status').textContent = 'All saved';
+  document.querySelector('.status-dot').style.background = 'var(--success)';
+  document.querySelector('.status-dot').style.boxShadow = '0 0 6px var(--success)';
+}
+
+function saveAll() {
+  // Sync array fields back to data
+  data.units.forEach((u, i) => {
+    if (tempArrays[`af-unit-feat-${i}`]) u.features = tempArrays[`af-unit-feat-${i}`].filter(Boolean);
+  });
+  data.projects.forEach((p, i) => {
+    if (tempArrays[`af-proj-nearby-${i}`]) p.nearby = tempArrays[`af-proj-nearby-${i}`].filter(Boolean);
+  });
+  data.amenities.forEach((a, i) => {
+    if (tempArrays[`af-am-extras-${i}`]) a.extras = tempArrays[`af-am-extras-${i}`].filter(Boolean);
+  });
+  data.payment.forEach((p, i) => {
+    if (tempArrays[`af-pay-feat-${i}`]) p.features = tempArrays[`af-pay-feat-${i}`].filter(Boolean);
+  });
+
+  const payload = buildExport();
+
+  // Save to localStorage as backup
+  try { localStorage.setItem('finihomes_admin', JSON.stringify(payload)); } catch(e) {}
+
+  // Save to Firebase Firestore
+  if (window._fb) {
+    const { db, doc, setDoc } = window._fb;
+    document.getElementById('save-status').textContent = 'Saving…';
+    setDoc(doc(db, 'site', 'content'), payload)
+      .then(() => { markSaved(); toast('Saved to Firebase ✓ — website updated live!'); })
+      .catch(err => { toast('Firebase error: ' + err.message); markSaved(); });
+  } else {
+    markSaved();
+    toast('Changes saved locally (Firebase not connected yet)');
+  }
+}
+
+// ══════════════════════ FIREBASE LOAD ══════════════════════
+window._loadFromFirebase = async function() {
+  if (!window._fb) return;
+  const { db, doc, getDoc } = window._fb;
+  try {
+    document.getElementById('save-status').textContent = 'Loading…';
+    const snap = await getDoc(doc(db, 'site', 'content'));
+    if (snap.exists()) {
+      const saved = snap.data();
+      // Restore data arrays
+      if (saved.units) data.units = saved.units;
+      if (saved.projects) data.projects = saved.projects;
+      if (saved.amenities) data.amenities = saved.amenities;
+      if (saved.testimonials) data.testimonials = saved.testimonials;
+      if (saved.faq) data.faq = saved.faq;
+      // Restore form fields
+      if (saved.general) {
+        const g = saved.general;
+        ['brand','navTagline','footerTagline','office','logo','aboutTitle','aboutP1','aboutP2','aboutP3','stat1','stat2','stat3','stat4'].forEach(k => {
+          const elMap = {brand:'g-brand',navTagline:'g-navtag',footerTagline:'g-footer-tag',office:'g-office',logo:'g-logo',aboutTitle:'g-about-title',aboutP1:'g-about-p1',aboutP2:'g-about-p2',aboutP3:'g-about-p3',stat1:'g-stat1',stat2:'g-stat2',stat3:'g-stat3',stat4:'g-stat4'};
+          const el = document.getElementById(elMap[k]);
+          if (el && g[k] !== undefined) el.value = g[k];
+        });
+      }
+      if (saved.hero) {
+        const h = saved.hero;
+        if (h.headline) document.getElementById('h-headline').value = h.headline;
+        if (h.subheadline) document.getElementById('h-sub').value = h.subheadline;
+        if (h.badge1) document.getElementById('h-badge1').value = h.badge1;
+        if (h.badge2) document.getElementById('h-badge2').value = h.badge2;
+        if (h.cta) document.getElementById('h-cta').value = h.cta;
+      }
+      if (saved.whyus) {
+        if (saved.whyus.label) document.getElementById('why-label').value = saved.whyus.label;
+        if (saved.whyus.title) document.getElementById('why-title').value = saved.whyus.title;
+        if (saved.whyus.points) data.whyus = saved.whyus.points;
+      }
+      if (saved.payment) {
+        if (saved.payment.label) document.getElementById('pay-label').value = saved.payment.label;
+        if (saved.payment.title) document.getElementById('pay-title').value = saved.payment.title;
+        if (saved.payment.options) data.payment = saved.payment.options;
+      }
+      if (saved.contact) {
+        const c = saved.contact;
+        ['sectionTitle','navLogo','email','email2','phone','phone2','whatsapp','viber','fbUrl','fbName','office'].forEach(k => {
+          const elMap = {sectionTitle:'c-title',navLogo:'c-nav-logo',email:'c-email',email2:'c-email2',phone:'c-phone',phone2:'c-phone2',whatsapp:'c-whatsapp',viber:'c-viber',fbUrl:'c-fb-url',fbName:'c-fb-name',office:'c-office'};
+          const el = document.getElementById(elMap[k]);
+          if (el && c[k] !== undefined) el.value = c[k];
+        });
+      }
+      if (saved.sectionHeadings) {
+        const sh = saved.sectionHeadings;
+        if (sh.testimonials) { if (sh.testimonials.label) document.getElementById('test-label').value = sh.testimonials.label; if (sh.testimonials.title) document.getElementById('test-title').value = sh.testimonials.title; }
+        if (sh.amenities) { if (sh.amenities.label) document.getElementById('am-label').value = sh.amenities.label; if (sh.amenities.title) document.getElementById('am-title').value = sh.amenities.title; }
+        if (sh.faq) { if (sh.faq.label) document.getElementById('faq-label').value = sh.faq.label; if (sh.faq.title) document.getElementById('faq-title').value = sh.faq.title; }
+        if (sh.partners) { if (sh.partners.label) document.getElementById('part-label').value = sh.partners.label; if (sh.partners.title) document.getElementById('part-title').value = sh.partners.title; }
+      }
+      // Re-render lists
+      renderUnits(); renderProjects(); renderAmenities(); renderTestimonials(); renderFaq();
+      renderWhyUs(); renderPayment();
+      initMediaGrids();
+      updateDashboard();
+      toast('Loaded from Firebase ✓');
+    }
+    markSaved();
+  } catch(err) {
+    console.warn('Firebase load error:', err);
+    markSaved();
+  }
+};
+
+// ══════════════════════ AUTH FUNCTIONS ══════════════════════
+const ALLOWED_EMAILS = [
+  "joven.rebuyas910@gmail.com",
+  "johnpauldumigpi.rebuyas@gmail.com"
+];
+
+function doGoogleLogin() {
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if (!window._fb) { errEl.textContent = 'Firebase not ready. Refresh and try again.'; return; }
+  window._fb.signInWithGoogle()
+    .then(result => {
+      const email = result.user.email;
+      if (!ALLOWED_EMAILS.includes(email)) {
+        // Sign out immediately and show error
+        window._fb.signOut(window._fb.auth);
+        errEl.textContent = '⛔ Access denied. This Google account is not authorized.';
+      }
+    })
+    .catch(err => {
+      if (err.code === 'auth/popup-closed-by-user') return;
+      errEl.textContent = err.message;
+    });
+}
+
+function doSignOut() {
+  if (!window._fb) return;
+  window._fb.signOut(window._fb.auth);
+}
+
+// ══════════════════════ EXPORT ══════════════════════
+function buildExport() {
+  return {
+    general: {
+      brand: document.getElementById('g-brand')?.value,
+      navTagline: document.getElementById('g-navtag')?.value,
+      footerTagline: document.getElementById('g-footer-tag')?.value,
+      office: document.getElementById('g-office')?.value,
+      logo: document.getElementById('g-logo')?.value,
+      aboutTitle: document.getElementById('g-about-title')?.value,
+      aboutP1: document.getElementById('g-about-p1')?.value,
+      aboutP2: document.getElementById('g-about-p2')?.value,
+      aboutP3: document.getElementById('g-about-p3')?.value,
+      stat1: document.getElementById('g-stat1')?.value,
+      stat2: document.getElementById('g-stat2')?.value,
+      stat3: document.getElementById('g-stat3')?.value,
+      stat4: document.getElementById('g-stat4')?.value,
+    },
+    hero: {
+      headline: document.getElementById('h-headline')?.value,
+      subheadline: document.getElementById('h-sub')?.value,
+      badge1: document.getElementById('h-badge1')?.value,
+      badge2: document.getElementById('h-badge2')?.value,
+      cta: document.getElementById('h-cta')?.value,
+    },
+    whyus: {
+      label: document.getElementById('why-label')?.value,
+      title: document.getElementById('why-title')?.value,
+      points: data.whyus,
+    },
+    payment: {
+      label: document.getElementById('pay-label')?.value,
+      title: document.getElementById('pay-title')?.value,
+      options: data.payment,
+    },
+    contact: {
+      sectionTitle: document.getElementById('c-title')?.value,
+      navLogo: document.getElementById('c-nav-logo')?.value,
+      email: document.getElementById('c-email')?.value,
+      email2: document.getElementById('c-email2')?.value,
+      phone: document.getElementById('c-phone')?.value,
+      phone2: document.getElementById('c-phone2')?.value,
+      whatsapp: document.getElementById('c-whatsapp')?.value,
+      viber: document.getElementById('c-viber')?.value,
+      fbUrl: document.getElementById('c-fb-url')?.value,
+      fbName: document.getElementById('c-fb-name')?.value,
+      office: document.getElementById('c-office')?.value,
+    },
+    colors: {
+      bg: document.getElementById('col-bg')?.value,
+      dark: document.getElementById('col-dark')?.value,
+      light: document.getElementById('col-light')?.value,
+      cream: document.getElementById('col-cream')?.value,
+      warm: document.getElementById('col-warm')?.value,
+    },
+    fonts: {
+      display: document.getElementById('font-display')?.value,
+      body: document.getElementById('font-body')?.value,
+      size: document.getElementById('font-size')?.value,
+    },
+    units: data.units,
+    projects: data.projects,
+    amenities: data.amenities,
+    testimonials: data.testimonials,
+    faq: data.faq,
+    sectionHeadings: {
+      testimonials: { label: document.getElementById('test-label')?.value, title: document.getElementById('test-title')?.value },
+      amenities: { label: document.getElementById('am-label')?.value, title: document.getElementById('am-title')?.value },
+      faq: { label: document.getElementById('faq-label')?.value, title: document.getElementById('faq-title')?.value },
+      partners: { label: document.getElementById('part-label')?.value, title: document.getElementById('part-title')?.value },
+    },
+  };
+}
+
+function exportJSON() {
+  saveAll();
+  const blob = new Blob([JSON.stringify(buildExport(), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'finihomes-content.json'; a.click();
+  toast('JSON downloaded!');
+}
+
+function copyInstructions() {
+  saveAll();
+  const exp = buildExport();
+  const patch = `// ===== FINIHOMES CONTENT PATCH =====
+// Paste this at the TOP of your <script> block, replacing the data arrays
+
+const units = ${JSON.stringify(exp.units, null, 2)};
+
+const projects = ${JSON.stringify(exp.projects, null, 2)};
+
+const amenities = ${JSON.stringify(exp.amenities, null, 2)};
+
+const testimonials = ${JSON.stringify(exp.testimonials, null, 2)};
+
+const faqs = ${JSON.stringify(exp.faq, null, 2)};
+
+// Hero / General overrides — apply after DOM ready:
+// document.getElementById('hero-theme').textContent = ${JSON.stringify(exp.hero?.headline)};
+// document.getElementById('hero-subtheme').textContent = ${JSON.stringify(exp.hero?.subheadline)};
+// document.getElementById('display-email').textContent = ${JSON.stringify(exp.contact?.email)};
+// document.getElementById('display-phone').textContent = ${JSON.stringify(exp.contact?.phone)};
+`;
+  navigator.clipboard.writeText(patch).then(() => toast('JS patch copied to clipboard!')).catch(() => toast('Copy failed — try Export JSON instead'));
+}
+
+// ══════════════════════ TOAST ══════════════════════
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> ${msg}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ══════════════════════ MEDIA LIBRARY ══════════════════════
+// mediaStore: key → { name, url, type('image'|'video'), blob }
+const mediaStore = {};
+
+// ── Canonical filename map: mediaKey → target filename ──
+const MEDIA_FILENAMES = {
+  'hero-bg':  'Homepage.jpg',
+  'why-video':'Finihomes Video.mp4',
+  // Projects (main + 3 extra photos each = 4 total in modal carousel)
+  'proj-0':   'Marulas.png',
+  'proj-0-1': 'marulas2.png', 'proj-0-2': 'marulas3.png', 'proj-0-3': 'marulas4.png',
+  'proj-1':   'Buildersville.png',
+  'proj-1-1': 'buildersville2.png', 'proj-1-2': 'buildersville3.png', 'proj-1-3': 'buildersville4.png',
+  'proj-2':   'Marilao.jpg',
+  'proj-2-1': 'marilao2.png', 'proj-2-2': 'marilao3.png', 'proj-2-3': 'marilao4.png',
+  // Units (main carousel img + 3 extra modal photos each = 4 total in modal carousel)
+  'unit-0':   'studio.png',
+  'unit-0-1': 'studio1.png', 'unit-0-2': 'studio2.png', 'unit-0-3': 'studio3.png', 'unit-0-4': 'studio4.png',
+  'unit-1':   '1br.png',
+  'unit-1-1': '1br1.png', 'unit-1-2': '1br2.png', 'unit-1-3': '1br3.png', 'unit-1-4': '1br4.png',
+  'unit-2':   '2br.png',
+  'unit-2-1': '2br1.png', 'unit-2-2': '2br2.png', 'unit-2-3': '2br3.png', 'unit-2-4': '2br4.png',
+  'unit-3':   '3br.png',
+  'unit-3-1': '3br1.png', 'unit-3-2': '3br2.png', 'unit-3-3': '3br3.png', 'unit-3-4': '3br4.png',
+  // Amenities — lowercase to match index.html filenames
+  'am-0': 'security.jpg',
+  'am-1': 'board.jpg',
+  'am-2': 'commercial-center.jpg',
+  'am-3': 'park.jpg',
+  'am-4': 'locker.jpg',
+  'am-5': 'lounge.jpg',
+  'am-6': 'hall.jpg',
+  'am-7': 'parking.jpg',
+  'am-8': 'way.jpg',
+  'am-9': 'pool.jpg',
+  // Logos
+  'logo': 'finihomes_pfp.png',
+};
+
+function getTargetFilename(mediaKey, originalName) {
+  if (MEDIA_FILENAMES[mediaKey]) return MEDIA_FILENAMES[mediaKey];
+  return originalName; // fallback for extra/unknown slots
+}
+
+function updateMediaCounts() {
+  const imgs = Object.values(mediaStore).filter(m => m.type === 'image').length;
+  const vids = Object.values(mediaStore).filter(m => m.type === 'video').length;
+  document.getElementById('img-count').textContent = imgs;
+  document.getElementById('vid-count').textContent = vids;
+  document.getElementById('nb-media').textContent = imgs + vids;
+}
+
+// Generic single-file handler (named slots)
+function handleFile(input, dzId, mediaKey) {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const type = file.type.startsWith('video') ? 'video' : 'image';
+  const name = getTargetFilename(mediaKey, file.name);
+  mediaStore[mediaKey] = { name, url, type, blob: file };
+  showPreview(mediaKey, url, type, dzId);
+  updateMediaCounts();
+  markUnsaved();
+}
+
+function showPreview(mediaKey, url, type, dzId) {
+  const previewEl = document.getElementById('preview-' + mediaKey);
+  const dzEl = document.getElementById(dzId);
+  if (!previewEl) return;
+  if (type === 'video') {
+    const vid = document.getElementById('prev-vid-' + mediaKey);
+    if (vid) { vid.src = url; vid.play().catch(()=>{}); }
+  } else {
+    const img = document.getElementById('prev-img-' + mediaKey);
+    if (img) img.src = url;
+  }
+  previewEl.style.display = 'block';
+  if (dzEl) dzEl.style.display = 'none';
+}
+
+function clearMedia(mediaKey, dzId) {
+  if (mediaStore[mediaKey]) { URL.revokeObjectURL(mediaStore[mediaKey].url); delete mediaStore[mediaKey]; }
+  const previewEl = document.getElementById('preview-' + mediaKey);
+  const dzEl = document.getElementById(dzId);
+  if (previewEl) previewEl.style.display = 'none';
+  if (dzEl) dzEl.style.display = '';
+  updateMediaCounts();
+  markUnsaved();
+}
+
+function reupload(dzId) {
+  const dz = document.getElementById(dzId);
+  if (dz) { const inp = dz.querySelector('input[type="file"]'); if (inp) inp.click(); }
+}
+
+// Drag-over styling
+function dzOver(e, dzId) { e.preventDefault(); document.getElementById(dzId)?.classList.add('drag-over'); }
+function dzLeave(dzId) { document.getElementById(dzId)?.classList.remove('drag-over'); }
+function dzDrop(e, dzId, mediaKey) {
+  e.preventDefault();
+  dzLeave(dzId);
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const type = file.type.startsWith('video') ? 'video' : 'image';
+  const name = getTargetFilename(mediaKey, file.name);
+  mediaStore[mediaKey] = { name, url, type, blob: file };
+  showPreview(mediaKey, url, type, dzId);
+  updateMediaCounts();
+  markUnsaved();
+}
+
+// ── Grid slots (projects / units / amenities) ──
+function renderMediaGrid(containerId, items, keyPrefix, labelKey) {
+  const grid = document.getElementById(containerId);
+  if (!grid) return;
+  grid.innerHTML = items.map((item, i) => {
+    const key = `${keyPrefix}-${i}`;
+    const existing = mediaStore[key];
+    const filename = item[labelKey] || `${keyPrefix}-${i}`;
+    return `
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="media-tile ${existing ? 'has-media' : ''}" id="tile-${key}" onclick="triggerGridUpload('${key}','${keyPrefix}',${i})">
+          ${existing
+            ? existing.type === 'video'
+              ? `<video src="${existing.url}" muted loop playsinline style="width:100%;max-height:160px;object-fit:cover;"></video>`
+              : `<img src="${existing.url}" alt="${filename}" style="width:100%;height:160px;object-fit:cover;">`
+            : `<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:20px;">
+                 <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:var(--text-faint);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg>
+                 <span style="font-size:11px;color:var(--text-faint);text-align:center;">Upload</span>
+               </div>`
+          }
+          <div class="tile-label">${filename}</div>
+          ${existing ? `<div class="tile-overlay">
+            <button class="tile-action" onclick="event.stopPropagation();triggerGridUpload('${key}','${keyPrefix}',${i})">Replace</button>
+            <button class="tile-action danger" onclick="event.stopPropagation();clearGridSlot('${key}','${keyPrefix}',${i})">Remove</button>
+          </div>` : ''}
+        </div>
+        <input type="file" accept="image/*,video/*" id="file-${key}" style="display:none;" onchange="handleGridFile(this,'${key}','${keyPrefix}',${i})">
+      </div>
+    `;
+  }).join('');
+}
+
+function triggerGridUpload(key, prefix, i) {
+  document.getElementById('file-' + key)?.click();
+}
+
+function handleGridFile(input, key, prefix, i) {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const type = file.type.startsWith('video') ? 'video' : 'image';
+  const name = getTargetFilename(key, file.name);
+  mediaStore[key] = { name, url, type, blob: file };
+  // Re-render the correct grid
+  if (prefix === 'proj') renderMediaGrid('proj-images-grid', data.projects, 'proj', 'img');
+  else if (prefix === 'unit') renderMediaGrid('unit-images-grid', data.units, 'unit', 'img');
+  else if (prefix === 'am') renderMediaGrid('amenity-images-grid', data.amenities, 'am', 'img');
+  updateMediaCounts();
+  markUnsaved();
+}
+
+function clearGridSlot(key, prefix, i) {
+  if (mediaStore[key]) { URL.revokeObjectURL(mediaStore[key].url); delete mediaStore[key]; }
+  if (prefix === 'proj') renderMediaGrid('proj-images-grid', data.projects, 'proj', 'img');
+  else if (prefix === 'unit') renderMediaGrid('unit-images-grid', data.units, 'unit', 'img');
+  else if (prefix === 'am') renderMediaGrid('amenity-images-grid', data.amenities, 'am', 'img');
+  updateMediaCounts();
+  markUnsaved();
+}
+
+// ── Extra / misc uploads ──
+const extraFiles = [];
+function handleExtraFiles(input) {
+  Array.from(input.files).forEach(file => {
+    const url = URL.createObjectURL(file);
+    const type = file.type.startsWith('video') ? 'video' : 'image';
+    const key = 'extra-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+    extraFiles.push({ key, name: file.name, url, type, blob: file });
+    mediaStore[key] = { name: file.name, url, type, blob: file };
+  });
+  renderExtraGrid();
+  updateMediaCounts();
+  markUnsaved();
+}
+
+function dzDropExtra(e) {
+  e.preventDefault();
+  dzLeave('dz-extra');
+  const fakeInput = { files: e.dataTransfer.files };
+  handleExtraFiles(fakeInput);
+}
+
+function renderExtraGrid() {
+  const grid = document.getElementById('extra-grid');
+  grid.innerHTML = extraFiles.map((f, i) => `
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="media-tile has-media">
+        ${f.type === 'video'
+          ? `<video src="${f.url}" muted loop playsinline style="width:100%;max-height:160px;object-fit:cover;"></video>`
+          : `<img src="${f.url}" alt="${f.name}" style="width:100%;height:160px;object-fit:cover;">`
+        }
+        <div class="tile-label">${f.name}</div>
+        <div class="tile-overlay">
+          <button class="tile-action danger" onclick="removeExtra(${i})">Remove</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function removeExtra(i) {
+  const f = extraFiles[i];
+  if (f) { URL.revokeObjectURL(f.url); delete mediaStore[f.key]; extraFiles.splice(i,1); }
+  renderExtraGrid();
+  updateMediaCounts();
+  markUnsaved();
+}
+
+// ── Download all media ──
+async function downloadAllMedia() {
+  const entries = Object.values(mediaStore);
+  if (!entries.length) { toast('No media uploaded yet'); return; }
+  // Download each file individually (browsers don't allow native ZIP without a library)
+  for (const m of entries) {
+    const a = document.createElement('a');
+    a.href = m.url;
+    a.download = m.name;
+    a.click();
+    await new Promise(r => setTimeout(r, 300));
+  }
+  toast(`Downloading ${entries.length} file${entries.length>1?'s':''}…`);
+}
+
+function initMediaGrids() {
+  renderMediaGrid('proj-images-grid', data.projects, 'proj', 'img');
+  renderMediaGrid('unit-images-grid', data.units, 'unit', 'img');
+  renderMediaGrid('amenity-images-grid', data.amenities, 'am', 'img');
+  updateMediaCounts();
+}
+
+// ══════════════════════ SERVICE WORKER (PWA) ══════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+// ══════════════════════ DASHBOARD ══════════════════════
+function updateDashboard() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('dash-units', data.units.length);
+  set('dash-projects', data.projects.length);
+  set('dash-amenities', data.amenities.length);
+  set('dash-testimonials', data.testimonials.length);
+  set('dash-faq', data.faq.length);
+}
+
+// ══════════════════════ INIT ══════════════════════
+renderUnits();
+renderProjects();
+renderAmenities();
+renderTestimonials();
+renderFaq();
+renderWhyUs();
+renderPayment();
+initMediaGrids();
+updateDashboard();
+markSaved();
+</script>
+</body>
+</html>
